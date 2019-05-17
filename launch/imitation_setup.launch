@@ -4,7 +4,9 @@
 
   <include file="$(find razer_hydra)/launch/hydra.launch"/>
 
-  <node pkg="openni_tracker" type="openni_tracker" name="openni_tracker"/>
+  <node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" output="screen"/>
+
+  <node pkg="human_motion_imitation" type="frame_publisher" name="frame_publisher" output="screen"/>
 
   <node pkg="rviz" type="rviz" name="rviz"/>
 
