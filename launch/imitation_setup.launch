@@ -1,0 +1,11 @@
+<launch>
+
+  <include file="$(find openni_launch)/launch/openni.launch"/>
+
+  <include file="$(find razer_hydra)/launch/hydra.launch"/>
+
+  <node pkg="openni_tracker" type="openni_tracker" name="openni_tracker"/>
+
+  <node pkg="rviz" type="rviz" name="rviz"/>
+
+</launch>
