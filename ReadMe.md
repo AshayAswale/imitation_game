@@ -1,24 +1,29 @@
 # Human Motion Imitation
 
-### Dependencies
+## Dependencies
 Install the periferals from [here](https://www.reddit.com/r/ROS/comments/6qejy0/openni_kinect_installation_on_kinetic_indigo/)
 
 Download this [openni_tracker](https://github.com/AshayAswale/openni_tracker.git) instead of the ros-drivers one, 
 and catkin_make the workspace
 
 If no device found or something like that while launching openni_launch, try 
-roslaunch openni_launch openni.launch device_id:=#2. But this will impact other packages. 
+```bash
+roslaunch openni_launch openni.launch device_id:=#2
+```
+But this will impact other packages. So uninstall the install.sh using 
+```bash
+cd ~/kinect/SensorKinect/Platform/Linux/Redist/Sensor-Bin-Linux-x64-v5.1.2.1/
+sudo ./install.sh -u # Untill you see, no file exists
+sudo ./install.sh
+```
 
-So uninstall the install.sh using 
-./install.sh -u 
-
-### Running the code
+## Running the code
 Run the following command to launch everything. 
 ```bash
 roslaunch human_motion_imitation imitation_setup.launch
 ```
 
-### Calibration
+## Calibration
 #### Tracker
 Calibrate the tracker by standing in the _surrender pose_. On completion of the calibration message will read
 `Calibration complete, start tracking user`,
