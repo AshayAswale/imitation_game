@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(human_motion_imitation)
+project(imitation_game)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -12,10 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tough_common
-  tough_controller_interface
-  tough_footstep
-  tough_moveit_planners
-  tough_perception_common
+  tough_stability
 )
 
 ## System dependencies are found with CMake's conventions
@@ -138,7 +135,6 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(frame_publisher src/frame_publisher.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -148,12 +144,15 @@ add_executable(frame_publisher src/frame_publisher.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(frame_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(frame_publisher
-  ${catkin_LIBRARIES}
-)
+add_executable(frame_publisher src/frame_publisher.cpp)
+add_dependencies(frame_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(frame_publisher  ${catkin_LIBRARIES})
+
+add_executable(test_com src/test_com.cpp)
+add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(test_com  ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -170,7 +169,7 @@ target_link_libraries(frame_publisher
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS frame_publisher
+install(TARGETS frame_publisher test_com
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
