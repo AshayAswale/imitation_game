@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tough_common
   tough_stability
+  tough_moveit_planners
 )
 
 ## System dependencies are found with CMake's conventions
@@ -153,6 +154,10 @@ target_link_libraries(frame_publisher  ${catkin_LIBRARIES})
 add_executable(test_com src/test_com.cpp)
 add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(test_com  ${catkin_LIBRARIES})
+
+add_executable(plot_com_motion src/plot_com_motion.cpp)
+add_dependencies(plot_com_motion ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(plot_com_motion  ${catkin_LIBRARIES})
 
 #############
 ## Install ##
