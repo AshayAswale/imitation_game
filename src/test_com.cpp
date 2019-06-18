@@ -43,10 +43,16 @@ int main(int argc, char **argv)
     robot_state->getJointStateMessage(joint_state);
     for (std::size_t i = 0; i < joint_state.name.size(); i++)
     {
-      // if(std::find(chest_names.begin(), chest_names.end(), joint_state.name[i]) != chest_names.end())
-      //   joint_positions.insert({ joint_state.name[i], 0.34 });
-      // else
-      joint_positions.insert({ joint_state.name[i], joint_state.position[i] });
+      if(std::find(chest_names.begin(), chest_names.end(), joint_state.name[i]) != chest_names.end())
+        joint_positions.insert({ joint_state.name[i], 0.34 });
+      else if (joint_state.name[i] == left_arm_names.at(0))
+        joint_positions.insert({ joint_state.name[i], -1.5 });
+      else if (joint_state.name[i] == left_arm_names.at(1))
+        joint_positions.insert({ joint_state.name[i], 0.5 });
+      else if (std::find(left_arm_names.begin(), left_arm_names.end(), joint_state.name[i]) != left_arm_names.end())
+        joint_positions.insert({ joint_state.name[i], 0.0 });
+      else
+        joint_positions.insert({ joint_state.name[i], joint_state.position[i] });
     }
 
     COM.computeCOM(joint_positions, com_wrt_root, mass_robot, tf_right_foot, tf_left_foot);
