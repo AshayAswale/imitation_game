@@ -157,6 +157,11 @@ add_executable(frame_filter src/frame_filter.cpp)
 add_dependencies(frame_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(frame_filter  ${catkin_LIBRARIES})
 
+## Specify libraries to link a library or executable target against
+add_executable(pelvis_publisher src/pelvis_publisher.cpp)
+add_dependencies(pelvis_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pelvis_publisher  ${catkin_LIBRARIES})
+
 # add_executable(test_com src/test_com.cpp)
 # add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # target_link_libraries(test_com  ${catkin_LIBRARIES})
