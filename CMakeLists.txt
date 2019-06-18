@@ -12,8 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   tough_common
-  tough_stability
+  # tough_stability
   tough_moveit_planners
+  tough_controller_interface
 )
 
 ## System dependencies are found with CMake's conventions
@@ -151,13 +152,15 @@ add_executable(frame_publisher src/frame_publisher.cpp)
 add_dependencies(frame_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(frame_publisher  ${catkin_LIBRARIES})
 
-add_executable(test_com src/test_com.cpp)
-add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(test_com  ${catkin_LIBRARIES})
+## Specify libraries to link a library or executable target against
+add_executable(frame_filter src/frame_filter.cpp)
+add_dependencies(frame_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(frame_filter  ${catkin_LIBRARIES})
 
-add_executable(plot_com_motion src/plot_com_motion.cpp)
-add_dependencies(plot_com_motion ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(plot_com_motion  ${catkin_LIBRARIES})
+# add_executable(test_com src/test_com.cpp)
+# add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_com  ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##
@@ -174,7 +177,7 @@ target_link_libraries(plot_com_motion  ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS frame_publisher test_com
+install(TARGETS frame_publisher 
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
