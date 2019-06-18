@@ -7,27 +7,22 @@
 
 int vector_length = 200;
 
-tf::Quaternion filterQuaternion(const std::vector<std::vector<float>>& quater_vec)
+tf::Quaternion filterQuaternion(std::vector<std::vector<float>>& quater_vec)
 {
   tf::Quaternion final_quat;
-  static float x_avg, y_avg, z_avg, w_avg;
-  x_avg = 0, y_avg = 0, z_avg = 0, w_avg = 0;
-  for (int i = 0; i < quater_vec.at(0).size(); i++)
+  int mid = quater_vec.at(0).size() / 2;
+
+  for (int i = 0; i < quater_vec.size(); i++)
   {
-    x_avg += quater_vec.at(0).at(i) / quater_vec.at(0).size();
-    y_avg += quater_vec.at(1).at(i) / quater_vec.at(1).size();
-    z_avg += quater_vec.at(2).at(i) / quater_vec.at(2).size();
-    w_avg += quater_vec.at(3).at(i) / quater_vec.at(3).size();
+    std::sort(quater_vec.at(i).begin(), quater_vec.at(i).end());
   }
 
-  final_quat.setX(x_avg);
-  final_quat.setY(y_avg);
-  final_quat.setZ(z_avg);
-  final_quat.setW(w_avg);
+  final_quat.setX(quater_vec.at(0).at(mid));
+  final_quat.setY(quater_vec.at(1).at(mid));
+  final_quat.setZ(quater_vec.at(2).at(mid));
+  final_quat.setW(quater_vec.at(3).at(mid));
 
   final_quat.normalize();
-  // ROS_INFO_STREAM("normalized: X:" << final_quat.getX() << "  Y:" << final_quat.getY() << "  Z:" << final_quat.getZ()
-  //                                  << "  W:" << final_quat.getW());
   return final_quat;
 }
 
@@ -125,8 +120,8 @@ int main(int argc, char** argv)
     tf_message.transforms.at(0).header.stamp.nsec = ros::Time::now().nsec;
     filtered_hip_publisher.publish(tf_message);
 
-    ROS_INFO_STREAM("X diff: " << filtered_hip_transform.getRotation().getX() -
-                                      hip_transform_left.getRotation().getX());
+    // ROS_INFO_STREAM("X diff: " << filtered_hip_transform.getRotation().getX() -
+    //                                   hip_transform_left.getRotation().getX());
     rate.sleep();
   }
   return 0;
