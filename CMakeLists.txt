@@ -109,7 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES imitation_game
-#  CATKIN_DEPENDS roscpp rospy std_msgs tough_common tough_controller_interface tough_footstep tough_moveit_planners tough_perception_common
+ CATKIN_DEPENDS roscpp rospy std_msgs tough_common tough_controller_interface tough_footstep tough_moveit_planners tough_perception_common
  DEPENDS system_lib
 )
 
@@ -127,7 +127,11 @@ include
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
   src/filter_frames.cpp
+  src/shadow_legs.cpp
 )
+
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}  ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -162,10 +166,20 @@ add_executable(pelvis_publisher src/pelvis_publisher.cpp)
 add_dependencies(pelvis_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(pelvis_publisher  ${catkin_LIBRARIES})
 
+# ## Specify libraries to link a library or executable target against
+# add_executable(test_frame_filter src/test_frame_filter.cpp)
+# add_dependencies(test_frame_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_frame_filter  ${catkin_LIBRARIES} ${PROJECT_NAME})
+
 ## Specify libraries to link a library or executable target against
 add_executable(try_leg src/try_leg.cpp)
 add_dependencies(try_leg ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(try_leg  ${catkin_LIBRARIES} ${PROJECT_NAME})
+
+## Specify libraries to link a library or executable target against
+add_executable(test_shadow_legs src/test_shadow_legs.cpp)
+add_dependencies(test_shadow_legs ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(test_shadow_legs  ${catkin_LIBRARIES} ${PROJECT_NAME})
 
 # add_executable(test_com src/test_com.cpp)
 # add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
