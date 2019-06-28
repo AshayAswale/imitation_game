@@ -58,6 +58,11 @@ int main(int argc, char** argv)
   tf::Vector3 leg_position;
   geometry_msgs::PoseStamped leg_pose_pelvis;
   geometry_msgs::PoseStamped leg_pose_world;
+  geometry_msgs::Pose ground_pose;
+  ground_pose.position.x = 0.0;
+  ground_pose.position.y = 0.16;
+  ground_pose.position.z = 0.1;
+
   leg_pose_pelvis.header.frame_id = rd->getPelvisFrame();
 
   left_leg_listener_pelvis.waitForTransform("/openni/pelvis", "/openni/right_foot", ros::Time::now(),
@@ -69,25 +74,50 @@ int main(int argc, char** argv)
   // while(ros::ok && !start_code)
   //   ros::Duration(0.5f).sleep();
 
-
   left_leg_listener_pelvis.lookupTransform("/openni/pelvis", "/openni/right_foot", ros::Time(0.0),
                                            left_leg_transform_pelvis);
-  if(calib_height)
+  if (calib_height)
     height_factor = get_height_factor(left_leg_transform_pelvis);
 
-  while(ros::ok)
+  while (ros::ok)
   {
     left_leg_listener_pelvis.lookupTransform("/openni/pelvis", "/openni/right_foot", ros::Time(0.0),
                                              left_leg_transform_pelvis);
+                                             
     leg_pose_pelvis.pose = getPoseFromVector3(left_leg_transform_pelvis.getOrigin(), height_factor);
     robot_state->transformPose(leg_pose_pelvis, leg_pose_world, rd->getWorldFrame());
-    ROS_INFO_STREAM("\nPose X:" << left_leg_transform_pelvis.getOrigin().getX()
-                                << "\nPose Y:" << left_leg_transform_pelvis.getOrigin().getY()
-                                << "\nPose Z:" << left_leg_transform_pelvis.getOrigin().getZ());
-    leg_controller.moveFoot(RobotSide::LEFT, leg_pose_world.pose, 2.0f);
-    ros::Duration(2.0f).sleep();
-  }
 
+    if (leg_pose_world.pose.position.z > 0.12)
+    {
+      if(left_leg_transform_pelvis.getOrigin().length()<0.8)
+      {
+        leg_controller.moveFoot(RobotSide::LEFT, leg_pose_world.pose, 1.0f);
+        ROS_INFO_STREAM("Sending Command:");
+        // ROS_INFO_STREAM("Sending Command: \n X: " << leg_pose_world.pose.position.x
+        //                                           << "\n Y: " << leg_pose_world.pose.position.y
+        //                                           << "\n Z: " << leg_pose_world.pose.position.z);
+        ros::Duration(1.0f).sleep();
+      }
+      else
+      {
+        continue;
+      }
+    }
+    else if (robot_state->isRobotInDoubleSupport())
+    {
+      // ROS_INFO("Skipping.");
+      // ros::Duration(1.0f).sleep();
+      continue;
+    }
+    else
+    {
+      ROS_INFO("Placing leg");
+      leg_controller.moveFoot(RobotSide::LEFT, ground_pose, 1.0);
+      ros::Duration(1.0f).sleep();
+      leg_controller.placeLeg(RobotSide::LEFT, 0.1, 0.5);
+      ros::Duration(0.2f).sleep();
+    }
+  }
   spinner.stop();
   return 0;
 }
