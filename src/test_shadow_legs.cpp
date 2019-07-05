@@ -1,5 +1,6 @@
 #include <imitation_game/shadow_legs.h>
 
+
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "test_shadow_legs");
@@ -8,6 +9,8 @@ int main(int argc, char** argv)
   spinner.start();
 
   ShadowLegs shadow_legs(nh);
+  
+
   shadow_legs.startLegsShadowMotion();
 
   ros::Duration(40.0f).sleep();

@@ -31,7 +31,7 @@ void ShadowLegs::startMotionController()
     current_leg_ = LegUpSide::LEFT;  //(current_leg_ == LegUpSide::LEFT) ? LegUpSide::RIGHT : LegUpSide::LEFT;
     update();
     control();
-    // execute();
+    execute();
     rate.sleep();
   }
 }
@@ -39,6 +39,7 @@ void ShadowLegs::startMotionController()
 void ShadowLegs::startLegsShadowMotion()
 {
   setHeightFactor();
+  setPelvisHeight();
   // thread_for_move_group_init_ = std::thread(&TaskspacePlanner::initializeMoveGroupsForCartesianPath, this);
   thread_for_shadow_motion_ = std::thread(&ShadowLegs::startMotionController, this);
 }
@@ -95,8 +96,10 @@ void ShadowLegs::updateHumanFootTransform()
   catch(const std::exception& e)
   {
     std::cerr << e.what() << '\n';
+    ros::Duration(0.01).sleep();
+    updateHumanFootTransform();
   }
-  
+
   // ROS_INFO("Transform Found!");
 }
 
@@ -112,7 +115,7 @@ geometry_msgs::Pose ShadowLegs::getPoseFromVector3(const tf::Vector3& vector)
   static geometry_msgs::Pose pose;
   pose.position.x = -vector.getX();
   pose.position.y = -vector.getY();
-  pose.position.z = vector.getZ();
+  pose.position.z = vector.getZ() - rd_->getFootFrameOffset();
   pose.orientation.w = 1.0;
   pose.orientation.x = 0.0;
   pose.orientation.y = 0.0;
@@ -125,7 +128,7 @@ void ShadowLegs::setHeightFactor()
   updateHumanFootTransform();
   human_leg_length_ = leg_transform_pelvis_.getOrigin().length();
   human_height_ = std::abs(leg_transform_pelvis_.getOrigin().getZ());
-  scale_factor_ = robot_leg_height_ / (human_leg_length_ + 0.05);
+  scale_factor_ = robot_leg_height_ / (human_leg_length_ + 0.15);
   ROS_ERROR("Height Factor %f", scale_factor_);
 }
 
@@ -137,7 +140,7 @@ void ShadowLegs::control()
 
 bool ShadowLegs::isMotionExecutable()
 {
-  if((leg_transform_pelvis_.getOrigin().length() * scale_factor_) >= robot_leg_height_ + 0.1)
+  if((leg_transform_pelvis_.getOrigin().length() * scale_factor_) >= robot_leg_height_)
   {
     ROS_WARN("Out of reach point!");
     return false;
@@ -167,9 +170,9 @@ void ShadowLegs::executeLegMotion()
   if (execute_once_)
   {
     robot_side_ = (current_leg_ == LegUpSide::LEFT) ? RobotSide::LEFT : RobotSide::RIGHT;
-    leg_controller_->moveFoot(robot_side_, leg_pose_world_.pose, 1.0f);
+    leg_controller_->moveFoot(robot_side_, leg_pose_world_.pose, motion_time_);
     ROS_INFO_STREAM("Sending Command:");
-    ros::Duration(1.0f).sleep();
+    ros::Duration(motion_time_).sleep();
     execute_once_ = false;
   }
 }
@@ -180,8 +183,8 @@ void ShadowLegs::executePlaceLeg()
   {
     ROS_INFO("Placing Leg");
     robot_side_ = (current_leg_ == LegUpSide::LEFT) ? RobotSide::LEFT : RobotSide::RIGHT;
-    leg_controller_->moveFoot(robot_side_, ground_pose_, 1.0);
-    ros::Duration(1.0f).sleep();
+    leg_controller_->moveFoot(robot_side_, ground_pose_, motion_time_);
+    ros::Duration(motion_time_).sleep();
     leg_controller_->placeLeg(robot_side_, 0.1, 0.5);
     ros::Duration(0.2f).sleep();
   }
@@ -191,4 +194,9 @@ void ShadowLegs::executeLegShift()
 {
   executePlaceLeg();
   executeLegMotion();
+}
+
+void ShadowLegs::setPelvisHeight()
+{
+  pelvis_controller_->controlPelvisHeight(0.9, 1.0f);
 }

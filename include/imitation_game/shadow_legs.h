@@ -21,9 +21,9 @@ private:
   tf::StampedTransform leg_transform_pelvis_;
 
   float scale_factor_ = 1.0f;
-  float robot_leg_height_ = 0.80f;
+  float robot_leg_height_ = 0.90f;
   float human_height_, human_leg_length_;
-  float motion_time_ = 2.0f;
+  float motion_time_ = 1.0f;
 
   LegControlInterface* leg_controller_;
   PelvisControlInterface* pelvis_controller_;
@@ -50,6 +50,7 @@ private:
   void setHeightFactor();
   void waitforTransform(float time = 2.0f);
   geometry_msgs::Pose getPoseFromVector3(const tf::Vector3& vector);
+  void setPelvisHeight();
 
   void startMotionController();
 
