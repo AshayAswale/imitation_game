@@ -23,20 +23,20 @@ private:
   tf::Vector3 left_leg_init_, right_leg_init_, pelvis_init_;
 
   float alpha_ = 1.0f;
-  float l_r_ = 0.90f; // ATLAS
+  float l_r_ = 0.85f; // ATLAS
   float l_h_;
   float motion_time_ = 1.0f;
   float pelvis_threshold_ = 0.1;
-  float robot_pelvis_init_height_ = 0.9;
+  float robot_pelvis_init_height_ = 0.85;
 
-  float psi_x_ = 0.3, psi_y_ = 0.4, psi_z_ = 0.2;
+  float psi_x_ = 0.3, psi_y_ = 0.5, psi_z_ = 0.2;
 
   LegControlInterface* leg_controller_;
   PelvisControlInterface* pelvis_controller_;
   RobotStateInformer* robot_state_;
   RobotDescription* rd_;
 
-  LegUpSide human_leg_up_side_, robot_leg_up_side_, current_leg_;
+  LegUpSide swing_leg_side, robot_leg_up_side_, current_leg_;
   RobotSide robot_side_;
   geometry_msgs::PoseStamped leg_pose_world_, leg_pose_pelvis_;
   geometry_msgs::Pose ground_pose_;
@@ -51,12 +51,13 @@ private:
   std::string left_foot_frame_ = PREFIX_OPENNI + "left_foot", right_foot_frame_ = PREFIX_OPENNI + "right_foot",
               pelvis_frame_ = PREFIX_OPENNI + "pelvis", openni_base_frame_ = "openni_depth_frame";
 
-  std::string robot_pelvis_frame_ = "pelvis", robot_world_frame_ = "world";
+  // std::string robot_pelvis_frame_ = "pelvis", robot_world_frame_ = "world";
 
   std::thread thread_for_shadow_motion_;
 
   void setCalibValues();
-  
+
+
   inline bool isRobotInDoubleSupport()
   {
     return robot_state_->isRobotInDoubleSupport();
@@ -65,19 +66,24 @@ private:
   void startMotionController();
   bool isOperatorInDoubleSupport();
   bool isLegInGbr(std::string leg_frame);
-  bool updateLegsTransform();
+  void updateLegsTransform();
+
+  bool isPoseReachable();
 
   tf::StampedTransform getTransform(const std::string& foot_frame, const std::string& ref_frame);
 
   inline void setAlphaValue()
   {
     tf::StampedTransform latest_transform = getTransform(right_foot_frame_, pelvis_frame_);
-    float sigma = 0.1;
+    float sigma = 0.2;
     l_h_ = latest_transform.getOrigin().length();
     alpha_ = l_r_ / (l_h_ + sigma);
+    ROS_INFO("Alpha --> %f", alpha_);
   }
 
+  void placeLegDown();
   void setPelvisHeight();
+  void moveLeg();
 
   // void stopLegsShadowMotion();
 

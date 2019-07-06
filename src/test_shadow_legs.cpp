@@ -44,7 +44,7 @@ int main(int argc, char** argv)
   {
     shadow_legs.getGBR(markerArray);
     vis_pub.publish( markerArray );
-    ros::Duration(0.01).sleep();
+    ros::Duration(0.001).sleep();
   }
 
   shadow_legs.stopLegsShadowMotion();
