@@ -79,8 +79,8 @@ private:
     tf::StampedTransform latest_transform = getTransform(right_foot_frame_, pelvis_frame_);
     float sigma = 0.2;
     l_h_ = latest_transform.getOrigin().length();
-    // alpha_ = l_r_ / (l_h_ + sigma);
-    alpha_ = 0.5
+    alpha_ = l_r_ / (l_h_ + sigma);
+//     alpha_ = 0.5;
     ROS_INFO("Alpha --> %f", alpha_);
   }
 
