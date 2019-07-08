@@ -24,10 +24,12 @@ private:
 
   float alpha_ = 1.0f;
   float l_r_ = 0.85f; // ATLAS
+  // float l_r = 1.0; // Valkyrie
   float l_h_;
   float motion_time_ = 1.0f;
   float pelvis_threshold_ = 0.1;
-  float robot_pelvis_init_height_ = 0.85;
+  float robot_pelvis_init_height_ = 0.85; //Atlas
+  // float robot_pelvis_init_height_ = 1.0; //Valkyrie
 
   float psi_x_ = 0.3, psi_y_ = 0.5, psi_z_ = 0.2;
 
@@ -77,7 +79,8 @@ private:
     tf::StampedTransform latest_transform = getTransform(right_foot_frame_, pelvis_frame_);
     float sigma = 0.2;
     l_h_ = latest_transform.getOrigin().length();
-    alpha_ = l_r_ / (l_h_ + sigma);
+    // alpha_ = l_r_ / (l_h_ + sigma);
+    alpha_ = 0.5
     ROS_INFO("Alpha --> %f", alpha_);
   }
 
