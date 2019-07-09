@@ -28,10 +28,12 @@ private:
   float l_h_;
   float motion_time_ = 1.0f;
   float pelvis_threshold_ = 0.1;
-  float robot_pelvis_init_height_ = 0.85; //Atlas
-  // float robot_pelvis_init_height_ = 1.0; //Valkyrie
+  float robot_pelvis_init_height_;
+  float pelvis_min_height = 0.7;
+  float pelvis_motion_time_ = 0.3;
+  float delta_P;
 
-  float psi_x_ = 0.3, psi_y_ = 0.5, psi_z_ = 0.2;
+  float psi_x_ = 0.4, psi_y_ = 0.5, psi_z_ = 0.2;
 
   LegControlInterface* leg_controller_;
   PelvisControlInterface* pelvis_controller_;
@@ -87,6 +89,9 @@ private:
   void placeLegDown();
   void setPelvisHeight();
   void moveLeg();
+  void getFootOrientation(geometry_msgs::PoseStamped& foot_goal_pose);
+  void setPelvisInitialHeight();
+  void executePelvisHeight(float height);
 
   // void stopLegsShadowMotion();
 
