@@ -119,15 +119,15 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-include
-  ${catkin_INCLUDE_DIRS}
-)
+
+include_directories(${catkin_INCLUDE_DIRS} include)
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
   src/filter_frames.cpp
   src/shadow_legs.cpp
+  src/shadow_upper_body.cpp
+  # src/filter.cpp
 )
 
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -167,9 +167,9 @@ add_dependencies(pelvis_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 target_link_libraries(pelvis_publisher  ${catkin_LIBRARIES})
 
 # ## Specify libraries to link a library or executable target against
-# add_executable(test_frame_filter src/test_frame_filter.cpp)
-# add_dependencies(test_frame_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(test_frame_filter  ${catkin_LIBRARIES} ${PROJECT_NAME})
+# add_executable(test_filter_frames src/test_filter_frames.cpp)
+# add_dependencies(test_filter_frames ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# target_link_libraries(test_filter_frames  ${catkin_LIBRARIES} ${PROJECT_NAME})
 
 ## Specify libraries to link a library or executable target against
 add_executable(try_leg src/try_leg.cpp)
@@ -181,6 +181,11 @@ add_executable(test_shadow_legs src/test_shadow_legs.cpp)
 add_dependencies(test_shadow_legs ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(test_shadow_legs  ${catkin_LIBRARIES} ${PROJECT_NAME})
 
+## Specify libraries to link a library or executable target against
+add_executable(test_upper_body src/test_upper_body.cpp)
+add_dependencies(test_upper_body ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(test_upper_body  ${catkin_LIBRARIES} ${PROJECT_NAME})
+  
 # add_executable(test_com src/test_com.cpp)
 # add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 # target_link_libraries(test_com  ${catkin_LIBRARIES})
