@@ -7,14 +7,16 @@ ShadowUpperBody::ShadowUpperBody(ros::NodeHandle nh) : nh_(nh)
 
 ShadowUpperBody::~ShadowUpperBody()
 {
+  run_code = false;
 }
-  
+
 void ShadowUpperBody::initialize()
 {
   rd_ = RobotDescription::getRobotDescription(nh_);
   robot_state_ = RobotStateInformer::getRobotStateInformer(nh_);
   wholebodyController_ = new WholebodyControlInterface(nh_);
   updateJointLimits();
+  // chest_frame_vector.push_back("chest_names")
 }
 
 void ShadowUpperBody::updateJointLimits()
@@ -70,13 +72,23 @@ void ShadowUpperBody::resizeJointTrajectory()
 
 void ShadowUpperBody::updateTranforms()
 {
-  double yaw, roll;
+  double yaw, roll, pitch;
   // trajectory_msgs::JointTrajectory joint_trajectory;
   tf::StampedTransform transform;
-  for (auto i : frames_vector_)
+  for (auto group : frames_vector_)
   {
-    std::string frame_name = i.data();
-    if (frame_name.compare(left_wrist_dummy) == 0)
+    std::string frame = group.at(0);
+    transform = getTransform(frame.data(), child_parent_frames_[frame.data()]);
+    getRollPitchYaw(transform, roll, pitch, yaw);
+    updateJointTrajectoryMsg(child_parent_frames_[frame.data()], roll, yaw);
+
+    frame = group.at(1);
+    transform = getTransform(frame.data(), child_parent_frames_[frame.data()]);
+    getRollPitchYaw(transform, roll, pitch, yaw);
+    updateJointTrajectoryMsg(child_parent_frames_[frame.data()], roll, pitch, yaw);
+
+    frame = group.at(2);
+    if (frame.compare(left_wrist_dummy) == 0)
     {
       for (int index = 4; index < 7; index++)
       {
@@ -85,7 +97,7 @@ void ShadowUpperBody::updateTranforms()
       }
       continue;
     }
-    else if(frame_name.compare(right_wrist_dummy)==0)
+    else if(frame.compare(right_wrist_dummy)==0)
     {
       for (int index = 4; index < 7; index++)
       {
@@ -94,17 +106,59 @@ void ShadowUpperBody::updateTranforms()
       }
       continue;
     }
-    transform = getTransform(i.data(), child_parent_frames_[i.data()]);
-    getRollYaw(transform, roll, yaw);
-    updateJointTrajectoryMsg(child_parent_frames_[i.data()], roll, yaw);    
   }
+  // {
+  //   std::vector<std::string> link = group.at(0);
+  //   transform = getTransform(link.data(), child_parent_frames_[link.data()]);
+  //   getRollPitchYaw(transform, roll, pitch, yaw);
+  //   updateJointTrajectoryMsg(child_parent_frames_[link.data()], roll, pitch, yaw);  
+
+
+    // std::string frame_name = i.data();
+    // if (frame_name.compare(left_wrist_dummy) == 0)
+    // {
+    //   for (int index = 4; index < 7; index++)
+    //   {
+    //     joint_trajectory_.joint_names.push_back(left_arm_names_.at(index));
+    //     joint_trajectory_.points.front().positions.push_back(0);
+    //   }
+    //   continue;
+    // }
+    // else if(frame_name.compare(right_wrist_dummy)==0)
+    // {
+    //   for (int index = 4; index < 7; index++)
+    //   {
+    //     joint_trajectory_.joint_names.push_back(right_arm_names_.at(index));
+    //     joint_trajectory_.points.front().positions.push_back(0);  
+    //   }
+    //   continue;
+    // }
+    // transform = getTransform(i.data(), child_parent_frames_[i.data()]);
+    // getRollPitchYaw(transform, roll, pitch, yaw);
+    // updateJointTrajectoryMsg(child_parent_frames_[i.data()], roll, pitch, yaw);    
+  // }
 }
 
-void ShadowUpperBody::getRollYaw(const tf::StampedTransform& transform, double& roll, double& yaw)
+void ShadowUpperBody::getRollPitchYaw(const tf::StampedTransform& transform, double& roll, double& pitch, double& yaw)
 {
-  tfScalar pitch;
-  tf::Matrix3x3 mat(transform.getRotation());
-  mat.getRPY(roll, pitch, yaw);
+  // tf::Matrix3x3 mat(transform.getRotation());
+  // mat.getRPY(roll, pitch, yaw);
+  yaw = atan2(-transform.getOrigin().getX(), transform.getOrigin().getY());
+  roll = atan2(transform.getOrigin().getZ(), transform.getOrigin().getY());
+  pitch = atan2(transform.getOrigin().getX(), transform.getOrigin().getZ());
+}
+
+void ShadowUpperBody::updateJointTrajectoryMsg(const std::string& frame_name, double roll, double pitch, double yaw)
+{
+  std::string yaw_frame = frame_name + yaw_;
+  std::string roll_frame = frame_name + roll_;
+  std::string pitch_frame = frame_name + pitch_;
+  // DO NOT CHANGE THE SEQUENCE
+
+  std::cout <<frame_name<< "  pitch: " << pitch << "   roll: " << std::max(std::abs(yaw), std::abs(roll)) << std::endl;
+
+  addToJointTrajectory(frame_name, pitch_frame, pitch);
+  addToJointTrajectory(frame_name, roll_frame, std::max(std::abs(yaw), std::abs(roll)));
 }
 
 void ShadowUpperBody::updateJointTrajectoryMsg(const std::string& frame_name, double roll, double yaw)
@@ -125,15 +179,15 @@ void ShadowUpperBody::addToJointTrajectory(const std::string& frame_name, const 
   string_map_iterator_ = human_robot_joint_map_.find(rotation_frame);
   if(string_map_iterator_ != human_robot_joint_map_.end())
   {
-  joint_limits_iterator_ = joint_limits_map.find(human_robot_joint_map_[rotation_frame]);
-  if(joint_limits_iterator_ != joint_limits_map.end())
-  {
-    joint_limit_temp = joint_limits_map[human_robot_joint_map_[rotation_frame]];
-    if (rotation < joint_limit_temp.first)
-      rotation = joint_limit_temp.first;
-    else if(rotation > joint_limit_temp.second)
-      rotation = joint_limit_temp.second;
-  }
+    joint_limits_iterator_ = joint_limits_map.find(human_robot_joint_map_[rotation_frame]);
+    if(joint_limits_iterator_ != joint_limits_map.end())
+    {
+      joint_limit_temp = joint_limits_map[human_robot_joint_map_[rotation_frame]];
+      if (rotation < joint_limit_temp.first)
+        rotation = joint_limit_temp.first;
+      else if(rotation > joint_limit_temp.second)
+        rotation = joint_limit_temp.second;
+    }
     joint_trajectory_.joint_names.push_back(human_robot_joint_map_[rotation_frame]);
     joint_trajectory_.points.front().positions.push_back(rotation);
   }
@@ -141,7 +195,6 @@ void ShadowUpperBody::addToJointTrajectory(const std::string& frame_name, const 
   {
     ROS_ERROR("%s frame not found in map human_robot_joint_map_", rotation_frame.c_str());
   }
-
 }
 
 tf::StampedTransform ShadowUpperBody::getTransform(const std::string& frame_name, const std::string& parent_frame)
@@ -169,13 +222,15 @@ void ShadowUpperBody::control()
 void ShadowUpperBody::execute()
 {
   wholebodyController_->executeTrajectory(joint_trajectory_);
+  ros::Duration(time_execution).sleep();
 }
 
 void ShadowUpperBody::startShadowMotion()
 {
-  while(run_code)
+  while(run_code&&ros::ok())
   {
     update();
+    // ros::Duration(0.1).sleep();
     execute();
   }
 }

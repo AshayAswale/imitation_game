@@ -17,7 +17,7 @@ private:
   std::map<std::string, int> jointIndexMap();
   trajectory_msgs::JointTrajectory joint_trajectory_;
 
-  double time_execution = 0.05;
+  double time_execution = 0.02;
   bool run_code = true;
 
   std::string OPNNI_PREFIX_ = "openni/";
@@ -26,18 +26,13 @@ private:
               left_elbow_frame_ = OPNNI_PREFIX_ + "left_elbow", right_hand_frame_ = OPNNI_PREFIX_ + "right_hand",
               left_hand_frame_ = OPNNI_PREFIX_ + "left_hand", operator_pelvis_frame_ = OPNNI_PREFIX_ + "pelvis";
 
-  std::string left_shoulder_yaw_ = "left_shoulder_yaw", left_shoulder_roll_ = "left_shoulder_roll",
-              right_shoulder_yaw_ = "right_shoulder_yaw", right_shoulder_roll_ = "right_shoulder_roll",
-              left_elbow_yaw_ = "left_elbow_yaw", left_elbow_roll_ = "left_elbow_roll",
-              right_elbow_yaw_ = "right_elbow_yaw", right_elbow_roll_ = "right_elbow_roll";
-
-  std::string yaw_ = "_yaw", roll_ = "_roll";
+  std::string yaw_ = "_yaw", roll_ = "_roll", pitch_ = "_pitch";
 
   std::map<std::string, std::string> human_robot_joint_map_ = {
     { left_shoulder_frame_+ yaw_, "l_arm_shz" },  { left_shoulder_frame_+ roll_, "l_arm_shx" },
     { right_shoulder_frame_+ yaw_, "r_arm_shz" }, { right_shoulder_frame_+ roll_, "r_arm_shx" },
-    { left_elbow_frame_+ yaw_, "l_arm_ely" },     { left_elbow_frame_+ roll_, "l_arm_elx" },
-    { right_elbow_frame_+ yaw_, "r_arm_elz" },    { right_elbow_frame_+ roll_, "r_arm_elx" }
+    { left_elbow_frame_+ pitch_, "l_arm_ely" },     { left_elbow_frame_+ roll_, "l_arm_elx" },
+    { right_elbow_frame_+ pitch_, "r_arm_ely" },    { right_elbow_frame_+ roll_, "r_arm_elx" }
   };
 
   std::map<std::string, std::string>::iterator string_map_iterator_;
@@ -53,10 +48,23 @@ private:
   std::string left_wrist_dummy = "left_dummy", right_wrist_dummy = "right_dummy";
   std::vector<std::string> left_arm_names_, right_arm_names_, chest_names_;
 
-  std::vector<std::string> frames_vector_ = {
+  std::vector<std::string> chest_frame_vector;
+
+  std::vector<std::string> left_frames_vector_ = {
     left_elbow_frame_,
     left_hand_frame_,
     left_wrist_dummy
+  };
+
+  std::vector<std::string> right_frames_vector_ = {
+    right_elbow_frame_,
+    right_hand_frame_,
+    right_wrist_dummy
+  };
+
+  std::vector<std::vector<std::string>> frames_vector_ = {
+    left_frames_vector_,
+    right_frames_vector_
   };
 
   tf::TransformListener tf_listener_;
@@ -71,8 +79,9 @@ private:
   void update();
   void updateTranforms();
   void updateJointTrajectoryMsg(const std::string& frame_name, double roll, double yaw);
+  void updateJointTrajectoryMsg(const std::string& frame_name, double roll, double pitch, double yaw);
   void clearJointTrajectory();
-  void getRollYaw(const tf::StampedTransform& transform, double& roll, double& yaw);
+  void getRollPitchYaw(const tf::StampedTransform& transform, double& roll, double& pitch, double& yaw);
   tf::StampedTransform getTransform(const std::string& foot_frame, const std::string& ref_frame);
   void resizeJointTrajectory();
   void updateJointLimits();
