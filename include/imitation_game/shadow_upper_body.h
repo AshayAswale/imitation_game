@@ -85,7 +85,7 @@ private:
   tf::StampedTransform getTransform(const std::string& foot_frame, const std::string& ref_frame);
   void resizeJointTrajectory();
   void updateJointLimits();
-  void insertJointLImits(const std::vector<std::string>& joint_names_vector);
+  void insertJointLImits(const std::vector<std::string>& joint_names_vector, const std::vector <std::pair<double, double>>& joint_limits_temp);
   void addToJointTrajectory(const std::string& frame_name, const std::string& rotation_frame, double rotation);
   // bool updateJointAngle(std::string frame_name, );
 

@@ -21,22 +21,26 @@ void ShadowUpperBody::initialize()
 
 void ShadowUpperBody::updateJointLimits()
 {
+  std::vector <std::pair<double, double>> joint_limits_temp;
+  
   rd_->getLeftArmJointNames(left_arm_names_);
-  insertJointLImits(left_arm_names_);
+  rd_->getLeftArmJointLimits(joint_limits_temp);
+  insertJointLImits(left_arm_names_, joint_limits_temp);
+  joint_limits_temp.clear();
 
   rd_->getRightArmJointNames(right_arm_names_);
-  insertJointLImits(right_arm_names_);
+  rd_->getRightArmJointLimits(joint_limits_temp);
+  insertJointLImits(right_arm_names_, joint_limits_temp);
+  joint_limits_temp.clear();
   
   rd_->getChestJointNames(chest_names_);
-  insertJointLImits(chest_names_);
+  rd_->getChestJointLimits(joint_limits_temp);
+  insertJointLImits(chest_names_, joint_limits_temp);
+  joint_limits_temp.clear();
 }
 
-void ShadowUpperBody::insertJointLImits(const std::vector<std::string>& joint_names_vector)
+void ShadowUpperBody::insertJointLImits(const std::vector<std::string>& joint_names_vector, const std::vector <std::pair<double, double>>& joint_limits_temp)
 {
-  std::vector <std::pair<double, double>> joint_limits_temp;
-  std::vector<std::string> joint_names_temp;
-
-  rd_->getLeftArmJointLimits(joint_limits_temp);
   for (int i = 0; i < joint_names_vector.size(); i++)
     joint_limits_map.insert(std::pair<std::string, std::pair<double, double>>(joint_names_vector.at(i), joint_limits_temp.at(i)));
 }
@@ -143,22 +147,25 @@ void ShadowUpperBody::getRollPitchYaw(const tf::StampedTransform& transform, dou
 {
   // tf::Matrix3x3 mat(transform.getRotation());
   // mat.getRPY(roll, pitch, yaw);
-  yaw = atan2(-transform.getOrigin().getX(), transform.getOrigin().getY());
-  roll = atan2(transform.getOrigin().getZ(), transform.getOrigin().getY());
-  pitch = atan2(transform.getOrigin().getX(), transform.getOrigin().getZ());
+  yaw = atan(-transform.getOrigin().getX()/transform.getOrigin().getY());
+  roll = atan(transform.getOrigin().getZ()/transform.getOrigin().getY());
+  pitch = atan(transform.getOrigin().getX()/transform.getOrigin().getZ());
 }
 
 void ShadowUpperBody::updateJointTrajectoryMsg(const std::string& frame_name, double roll, double pitch, double yaw)
 {
+  int right_compensate = 1;
   std::string yaw_frame = frame_name + yaw_;
   std::string roll_frame = frame_name + roll_;
   std::string pitch_frame = frame_name + pitch_;
   // DO NOT CHANGE THE SEQUENCE
 
-  std::cout <<frame_name<< "  pitch: " << pitch << "   roll: " << std::max(std::abs(yaw), std::abs(roll)) << std::endl;
+  // std::cout <<frame_name<< "  pitch: " << pitch << "   roll: " << std::max(std::abs(yaw), std::abs(roll)) << std::endl;
+  if(frame_name.at(7) == 'r')
+    right_compensate = -1;
 
   addToJointTrajectory(frame_name, pitch_frame, pitch);
-  addToJointTrajectory(frame_name, roll_frame, std::max(std::abs(yaw), std::abs(roll)));
+  addToJointTrajectory(frame_name, roll_frame, right_compensate*std::max(std::abs(yaw), std::abs(roll)));
 }
 
 void ShadowUpperBody::updateJointTrajectoryMsg(const std::string& frame_name, double roll, double yaw)
@@ -167,6 +174,7 @@ void ShadowUpperBody::updateJointTrajectoryMsg(const std::string& frame_name, do
   std::string roll_frame = frame_name + roll_;
   
   // DO NOT CHANGE THE SEQUENCE
+  //   std::cout <<frame_name<< "  yaw: " << yaw << "   roll: " << std::max(std::abs(yaw), std::abs(roll)) << std::endl;
 
   addToJointTrajectory(frame_name, yaw_frame, yaw);
   addToJointTrajectory(frame_name, roll_frame, roll);
@@ -222,7 +230,7 @@ void ShadowUpperBody::control()
 void ShadowUpperBody::execute()
 {
   wholebodyController_->executeTrajectory(joint_trajectory_);
-  ros::Duration(time_execution).sleep();
+  // ros::Duration(time_execution).sleep();
 }
 
 void ShadowUpperBody::startShadowMotion()
