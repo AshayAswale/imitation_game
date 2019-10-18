@@ -27,6 +27,8 @@ private:
   void clearVector(std::vector<std::vector<float>>& vector);
   void resizeVector(std::vector<std::vector<float>>& vector, int elements, int size);
 
+  void filteredFramesPublisher();
+  
 public:
   FilterFrames(const std::vector<std::string>& frame_names, std::string root_frame);
   FilterFrames(const std::string& frame_names, std::string root_frame);
@@ -39,8 +41,6 @@ public:
   bool getFilterPublisherStatus();
   void setFilterPublisherStatus(bool publish_filtered_frames_ = true);
 
-  void filteredFramesPublisher();
-  
   void operator()()
   {
     filteredFramesPublisher();

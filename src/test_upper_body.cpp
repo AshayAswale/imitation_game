@@ -10,10 +10,11 @@ int main(int argc, char** argv)
 
 
   ShadowUpperBody shadow(nh);
+  shadow.startShadowMotion();
 
   while (ros::ok())
   {
-    shadow.startShadowMotion();
+    ros::Duration(5).sleep();
   }
 
   return 0;

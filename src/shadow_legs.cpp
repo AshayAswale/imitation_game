@@ -12,6 +12,7 @@ ShadowLegs::ShadowLegs(ros::NodeHandle nh) : nh_(nh)
 
 ShadowLegs::~ShadowLegs()
 {
+  stopLegsShadowMotion();
   delete leg_controller_;
   delete pelvis_controller_;
 }
