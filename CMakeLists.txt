@@ -185,6 +185,11 @@ target_link_libraries(test_shadow_legs  ${catkin_LIBRARIES} ${PROJECT_NAME})
 add_executable(test_upper_body src/test_upper_body.cpp)
 add_dependencies(test_upper_body ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(test_upper_body  ${catkin_LIBRARIES} ${PROJECT_NAME})
+
+## Specify libraries to link a library or executable target against
+add_executable(gain_tuner src/gain_tuner.cpp)
+add_dependencies(gain_tuner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gain_tuner  ${catkin_LIBRARIES} ${PROJECT_NAME})
   
 # add_executable(test_com src/test_com.cpp)
 # add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -206,7 +211,7 @@ target_link_libraries(test_upper_body  ${catkin_LIBRARIES} ${PROJECT_NAME})
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS frame_publisher 
+install(TARGETS frame_publisher gain_tuner
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
