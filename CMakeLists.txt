@@ -124,7 +124,6 @@ include_directories(${catkin_INCLUDE_DIRS} include)
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
-  src/filter_frames.cpp
   src/shadow_legs.cpp
   src/shadow_upper_body.cpp
   # src/filter.cpp
@@ -150,31 +149,6 @@ target_link_libraries(${PROJECT_NAME}  ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-
-## Specify libraries to link a library or executable target against
-add_executable(frame_publisher src/frame_publisher.cpp)
-add_dependencies(frame_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(frame_publisher  ${catkin_LIBRARIES})
-
-## Specify libraries to link a library or executable target against
-add_executable(frame_filter src/frame_filter.cpp)
-add_dependencies(frame_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(frame_filter  ${catkin_LIBRARIES})
-
-## Specify libraries to link a library or executable target against
-add_executable(pelvis_publisher src/pelvis_publisher.cpp)
-add_dependencies(pelvis_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(pelvis_publisher  ${catkin_LIBRARIES})
-
-# ## Specify libraries to link a library or executable target against
-# add_executable(test_filter_frames src/test_filter_frames.cpp)
-# add_dependencies(test_filter_frames ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(test_filter_frames  ${catkin_LIBRARIES} ${PROJECT_NAME})
-
-## Specify libraries to link a library or executable target against
-add_executable(try_leg src/try_leg.cpp)
-add_dependencies(try_leg ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(try_leg  ${catkin_LIBRARIES} ${PROJECT_NAME})
 
 ## Specify libraries to link a library or executable target against
 add_executable(test_shadow_legs src/test_shadow_legs.cpp)
@@ -211,7 +185,7 @@ target_link_libraries(gain_tuner  ${catkin_LIBRARIES} ${PROJECT_NAME})
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS frame_publisher gain_tuner
+install(TARGETS gain_tuner
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
