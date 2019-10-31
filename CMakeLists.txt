@@ -124,6 +124,7 @@ include_directories(${catkin_INCLUDE_DIRS} include)
 
 ## Declare a C++ library
 add_library(${PROJECT_NAME}
+  src/joint_angles_controller.cpp
   src/shadow_legs.cpp
   src/shadow_upper_body.cpp
   # src/filter.cpp
