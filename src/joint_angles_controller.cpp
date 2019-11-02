@@ -1,6 +1,6 @@
 #include <imitation_game/joint_angles_controller.h>
 
-JointAnglesController::JointAnglesController(ros::NodeHandle nh):nh_(nh)
+JointAnglesController::JointAnglesController(ros::NodeHandle nh) : nh_(nh)
 {
   state_informer_ = RobotStateInformer::getRobotStateInformer(nh_);
   rd_ = RobotDescription::getRobotDescription(nh_);
@@ -31,12 +31,12 @@ void JointAnglesController::initializeVariables()
   left_arm_index_ = chest_index_ + chest_size_;
   right_arm_index_ = left_arm_index_ + left_arm_size_;
 
-  total_joints_size_ =  chest_size_ + left_arm_size_ + right_arm_size_;
+  total_joints_size_ = chest_size_ + left_arm_size_ + right_arm_size_;
   initializeMatrices(total_joints_size_);
 
   setDefaultGains();
 
-  d_t = 0.2;
+  d_t = 0.02;
   max_jt_accn = 5;
   min_jt_accn = -5;
 }
@@ -70,7 +70,7 @@ void JointAnglesController::initializeMatrices(const size_t size)
 
 void JointAnglesController::setDefaultGains()
 {
-  for (size_t i = 0; i < total_joints_size_;i++)
+  for (size_t i = 0; i < total_joints_size_; i++)
   {
     k_p_.diagonal()(i) = 110;
     k_d_.diagonal()(i) = 30;
@@ -80,23 +80,81 @@ void JointAnglesController::setDefaultGains()
 std::vector<double> JointAnglesController::getControlledJointAngles(const std::vector<double>& joint_angles)
 {
   vectorToDiagonalMatrix(joint_angles, desd_position_);
-  static std::vector<double> curr_joint_angles_;
-  state_informer_->getJointPositions(curr_joint_angles_);
+  curr_joint_angles_.resize(0);
+  while (curr_joint_angles_.size() == 0)
+    state_informer_->getJointPositions(curr_joint_angles_);
 
-  insertValuesInMatrix(joint_angles, chest_index_, chest_index_ + chest_size_, curr_position_);
-  insertValuesInMatrix(joint_angles, left_arm_index_, left_arm_index_ + left_arm_size_, curr_position_);
-  insertValuesInMatrix(joint_angles, right_arm_index_, right_arm_index_ + right_arm_size_, curr_position_);
+  insertValuesInMatrix(curr_joint_angles_, chest_joint_number_, chest_joint_number_ + chest_size_, chest_index_, curr_position_);
+  insertValuesInMatrix(curr_joint_angles_, left_arm_joint_number_, left_arm_joint_number_ + left_arm_size_, left_arm_index_,
+                       curr_position_);
+  insertValuesInMatrix(curr_joint_angles_, right_arm_joint_number_, right_arm_joint_number_ + right_arm_size_, right_arm_index_,
+                       curr_position_);
 
+  updateControlOutput();
+
+  return diagonalMatrixToVector(contr_output_);
+}
+
+void JointAnglesController::updateControlOutput()
+{
   error_ = desd_position_ - curr_position_;
+  // printMatrix(desd_position_, "desd_position_");
+  // printMatrix(curr_position_, "curr_position_");
+  // printMatrix(error_, "error_");
+  
   p_out_ = k_p_ * error_;
+  // printMatrix(k_p_, "k_p_");
+  // printMatrix(p_out_, "p_out_");
 
-  derivative_ = (error_ - prev_error_) / d_t;
+  derivative_ = (error_ - prev_error_) * (1/d_t);
+  // printMatrix(prev_error_, "prev_error_");
+  // printMatrix(derivative_, "derivative_");
+
   d_out_ = k_d_ * derivative_;
+  // printMatrix(k_d_, "k_d_");
+  // printMatrix(d_out_, "d_out_");
   prev_error_ = error_;
 
   contr_output_ = p_out_ + d_out_;
+  // printMatrix(contr_output_, "contr_output_");
 
   limitAccelerations(contr_output_);
-  
-  return diagonalMatrixToVector(contr_output_);
+}
+
+void JointAnglesController::limitAccelerations(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix)
+{
+  for (int i = 0; i < matrix.diagonal().size(); i++)
+  {
+    if (matrix.diagonal()(i) > max_jt_accn)
+    {
+      matrix.diagonal()(i) = max_jt_accn;
+    }
+    else if (matrix.diagonal()(i) < min_jt_accn)
+      matrix.diagonal()(i) = min_jt_accn;
+  }
+}
+
+std::vector<double>
+JointAnglesController::diagonalMatrixToVector(const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix)
+{
+  std::vector<double> vector;
+  int size = matrix.diagonal().size();
+  vector.resize(size);
+
+  for (int i = 0; i < size; i++)
+  {
+    vector.at(i) = matrix.diagonal()(i);
+  }
+  return vector;
+}
+
+void JointAnglesController::printMatrix(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix, const std::string& matrix_name)
+{
+  std::cout << "####  "<<matrix_name << "  ####  "<< std::endl;
+  for (int j = 0; j < matrix.diagonal().size();j++)
+  {
+    for (int i = 0; i < matrix.diagonal().size();i++)
+      std::cout << matrix.toDenseMatrix()(j,i)<<"  ";
+    std::cout << "" << std::endl;
+  }
 }

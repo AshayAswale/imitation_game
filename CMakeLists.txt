@@ -165,6 +165,11 @@ target_link_libraries(test_upper_body  ${catkin_LIBRARIES} ${PROJECT_NAME})
 add_executable(gain_tuner src/gain_tuner.cpp)
 add_dependencies(gain_tuner ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gain_tuner  ${catkin_LIBRARIES} ${PROJECT_NAME})
+
+## Specify libraries to link a library or executable target against
+add_executable(controller_tester src/controller_tester.cpp)
+add_dependencies(controller_tester ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(controller_tester  ${catkin_LIBRARIES} ${PROJECT_NAME})
   
 # add_executable(test_com src/test_com.cpp)
 # add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
