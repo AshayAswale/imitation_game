@@ -9,15 +9,16 @@ private:
   int chest_joint_number_, left_arm_joint_number_, right_arm_joint_number_;
   int chest_size_, left_arm_size_, right_arm_size_;
 
+  std::vector<std::string> joint_names_;
   std::vector<double> curr_joint_angles_;
 
   Eigen::DiagonalMatrix<double, Eigen::Dynamic> k_p_, k_d_, derivative_;
+  Eigen::DiagonalMatrix<double, Eigen::Dynamic> max_jt_accn, min_jt_accn;
   Eigen::DiagonalMatrix<double, Eigen::Dynamic> p_out_, d_out_, contr_output_;
   Eigen::DiagonalMatrix<double, Eigen::Dynamic> curr_position_, prev_position_, desd_position_;
   Eigen::DiagonalMatrix<double, Eigen::Dynamic> error_, prev_error_;
 
   size_t total_joints_size_;
-  double max_jt_accn, min_jt_accn;
   double d_t;
 
   ros::NodeHandle nh_;
@@ -28,8 +29,11 @@ private:
   void initializeMatrices(const size_t size);
 
   void updateControlOutput();
+  void updateCurrJointAngles();
   void limitAccelerations(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix);
   void printMatrix(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix, const std::string& matrix_name);
+
+  int getJointNumber(const std::string& joint_name);
 
   std::vector<double> diagonalMatrixToVector(const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix);
 
@@ -77,6 +81,14 @@ public:
    * @return std::vector<double>    - Returns the vector of accelerations
    */
   std::vector<double> getControlledJointAngles(const std::vector<double>& joint_angles);
+
+  /**
+   * @brief Updates the Acceleration parameter in the trajectory message. Takes position vector from message
+   *        as input and updates the accelerations accordingly.
+   *
+   * @param traj_msg                - Acceleration is updated with the help of position of this message.
+   */
+  void updateJointAccelerations(trajectory_msgs::JointTrajectory& traj_msg);
 
   void getKp(const int joint_number) const;
   void getKd(const int joint_number) const;

@@ -31,14 +31,17 @@ void JointAnglesController::initializeVariables()
   left_arm_index_ = chest_index_ + chest_size_;
   right_arm_index_ = left_arm_index_ + left_arm_size_;
 
+  joint_names_.resize(0);
+  joint_names_.insert(joint_names_.begin() + chest_index_, chest_joint_names.begin(), chest_joint_names.end());
+  joint_names_.insert(joint_names_.begin() + left_arm_index_, left_arm_joint_names.begin(), left_arm_joint_names.end());
+  joint_names_.insert(joint_names_.begin() + right_arm_index_, right_arm_joint_names.begin(), right_arm_joint_names.end());
+
   total_joints_size_ = chest_size_ + left_arm_size_ + right_arm_size_;
   initializeMatrices(total_joints_size_);
 
   setDefaultGains();
 
   d_t = 0.02;
-  max_jt_accn = 5;
-  min_jt_accn = -5;
 }
 
 void JointAnglesController::initializeMatrices(const size_t size)
@@ -54,6 +57,8 @@ void JointAnglesController::initializeMatrices(const size_t size)
   desd_position_.resize(size);
   error_.resize(size);
   prev_error_.resize(size);
+  max_jt_accn.resize(size);
+  min_jt_accn.resize(size);
 
   k_p_.setZero();
   k_d_.setZero();
@@ -66,20 +71,54 @@ void JointAnglesController::initializeMatrices(const size_t size)
   desd_position_.setZero();
   error_.setZero();
   prev_error_.setZero();
+  max_jt_accn.setZero();
+  min_jt_accn.setZero();
 }
 
 void JointAnglesController::setDefaultGains()
 {
-  k_p_.diagonal() << 6, 6, 6, 6, 10, 28, 6, 25, 6, 6, 6, 10, 28, 28, 25, 6, 6;
-  k_d_.diagonal() << 2, 2.7, 3.5, 4, 6.3, 11, 4.5, 0.1, 0.1, 0.1, 4.2, 6.1, 11, 15, 0.1, 0.1, 0.1;
+  //@todo some better method to define kp kd tables
+  /*
+      Kp Kd sequence in terms of joint names:
+          back_bkz
+          back_bky
+          back_bkx
+          l_arm_shz
+          l_arm_shx
+          l_arm_ely
+          l_arm_elx
+          l_arm_wry
+          l_arm_wrx
+          l_arm_wry2
+          r_arm_shz
+          r_arm_shx
+          r_arm_ely
+          r_arm_elx
+          r_arm_wry
+          r_arm_wrx
+          r_arm_wry2
+
+  */
+  k_p_.diagonal() << 6, 6, 6, 6, 10, 28, 6, 35, 35, 35, 6, 10, 28, 28, 35, 35, 35;
+  k_d_.diagonal() << 2, 2.5, 3.4, 4, 6.3, 11, 4.5, 0.1, 0.1, 0.1, 4.2, 6.1, 11, 15, 0.1, 0.1, 0.1;
+
+  max_jt_accn.diagonal() << 5, 5, 5, 5, 5, 5, 5, 20, 20, 20, 5, 5, 5, 5, 20, 20, 20;
+  min_jt_accn.diagonal() << -5, -5, -5, -5, -5, -5, -5, -20, -20, -20, -5, -5, -5, -5, -20, -20, -20;
 }
 
 std::vector<double> JointAnglesController::getControlledJointAngles(const std::vector<double>& joint_angles)
 {
   vectorToDiagonalMatrix(joint_angles, desd_position_);
+  updateCurrJointAngles();
+  updateControlOutput();
+
+  return diagonalMatrixToVector(contr_output_);
+}
+
+void JointAnglesController::updateCurrJointAngles()
+{
   curr_joint_angles_.resize(0);
-  while (curr_joint_angles_.size() == 0)
-    state_informer_->getJointPositions(curr_joint_angles_);
+  state_informer_->getJointPositions(curr_joint_angles_);
 
   insertValuesInMatrix(curr_joint_angles_, chest_joint_number_, chest_joint_number_ + chest_size_, chest_index_,
                        curr_position_);
@@ -87,34 +126,18 @@ std::vector<double> JointAnglesController::getControlledJointAngles(const std::v
                        left_arm_index_, curr_position_);
   insertValuesInMatrix(curr_joint_angles_, right_arm_joint_number_, right_arm_joint_number_ + right_arm_size_,
                        right_arm_index_, curr_position_);
-
-  updateControlOutput();
-
-  return diagonalMatrixToVector(contr_output_);
 }
 
 void JointAnglesController::updateControlOutput()
 {
   error_ = desd_position_ - curr_position_;
-  // printMatrix(desd_position_, "desd_position_");
-  // printMatrix(curr_position_, "curr_position_");
-  // printMatrix(error_, "error_");
-
   p_out_ = k_p_ * error_;
-  // printMatrix(k_p_, "k_p_");
-  // printMatrix(p_out_, "p_out_");
 
   derivative_ = (error_ - prev_error_) * (1 / d_t);
-  // printMatrix(prev_error_, "prev_error_");
-  // printMatrix(derivative_, "derivative_");
-
   d_out_ = k_d_ * derivative_;
-  // printMatrix(k_d_, "k_d_");
-  // printMatrix(d_out_, "d_out_");
   prev_error_ = error_;
 
   contr_output_ = p_out_ + d_out_;
-  // printMatrix(contr_output_, "contr_output_");
 
   limitAccelerations(contr_output_);
 }
@@ -123,12 +146,12 @@ void JointAnglesController::limitAccelerations(Eigen::DiagonalMatrix<double, Eig
 {
   for (int i = 0; i < matrix.diagonal().size(); i++)
   {
-    if (matrix.diagonal()(i) > max_jt_accn)
+    if (matrix.diagonal()(i) > max_jt_accn.diagonal()(i))
     {
-      matrix.diagonal()(i) = max_jt_accn;
+      matrix.diagonal()(i) = max_jt_accn.diagonal()(i);
     }
-    else if (matrix.diagonal()(i) < min_jt_accn)
-      matrix.diagonal()(i) = min_jt_accn;
+    else if (matrix.diagonal()(i) < min_jt_accn.diagonal()(i))
+      matrix.diagonal()(i) = min_jt_accn.diagonal()(i);
   }
 }
 
@@ -156,4 +179,39 @@ void JointAnglesController::printMatrix(Eigen::DiagonalMatrix<double, Eigen::Dyn
       std::cout << matrix.toDenseMatrix()(j, i) << "  ";
     std::cout << "" << std::endl;
   }
+}
+
+void JointAnglesController::updateJointAccelerations(trajectory_msgs::JointTrajectory& traj_msg)
+{
+  for(auto& traj_pt : traj_msg.points)
+  {
+    updateCurrJointAngles();
+    desd_position_ = curr_position_;
+    
+    for (int i = 0; i < traj_msg.joint_names.size(); i++)
+    {
+      int jt_no = getJointNumber(traj_msg.joint_names.at(i));
+      desd_position_.diagonal()(jt_no) = traj_pt.positions.at(i);
+    }
+
+    updateCurrJointAngles();
+    updateControlOutput();
+
+    for (int i = 0; i < traj_msg.joint_names.size(); i++)
+    {
+      int jt_no = getJointNumber(traj_msg.joint_names.at(i));
+      traj_pt.accelerations.at(i) = contr_output_.diagonal()(jt_no);
+    }
+  }
+}
+
+int JointAnglesController::getJointNumber(const std::string& joint_name)
+{
+  for (int i = 0; i < joint_names_.size(); i++)
+  {
+    if(joint_names_.at(i) == joint_name)
+      return i;
+  }
+  ROS_ERROR("Could not find joint name %s in controller joint_names\n", joint_name);
+  return -1;
 }
