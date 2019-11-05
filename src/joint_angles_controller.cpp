@@ -70,11 +70,8 @@ void JointAnglesController::initializeMatrices(const size_t size)
 
 void JointAnglesController::setDefaultGains()
 {
-  for (size_t i = 0; i < total_joints_size_; i++)
-  {
-    k_p_.diagonal()(i) = 110;
-    k_d_.diagonal()(i) = 30;
-  }
+  k_p_.diagonal() << 6, 6, 6, 6, 10, 28, 6, 25, 6, 6, 6, 10, 28, 28, 25, 6, 6;
+  k_d_.diagonal() << 2, 2.7, 3.5, 4, 6.3, 11, 4.5, 0.1, 0.1, 0.1, 4.2, 6.1, 11, 15, 0.1, 0.1, 0.1;
 }
 
 std::vector<double> JointAnglesController::getControlledJointAngles(const std::vector<double>& joint_angles)
@@ -84,11 +81,12 @@ std::vector<double> JointAnglesController::getControlledJointAngles(const std::v
   while (curr_joint_angles_.size() == 0)
     state_informer_->getJointPositions(curr_joint_angles_);
 
-  insertValuesInMatrix(curr_joint_angles_, chest_joint_number_, chest_joint_number_ + chest_size_, chest_index_, curr_position_);
-  insertValuesInMatrix(curr_joint_angles_, left_arm_joint_number_, left_arm_joint_number_ + left_arm_size_, left_arm_index_,
+  insertValuesInMatrix(curr_joint_angles_, chest_joint_number_, chest_joint_number_ + chest_size_, chest_index_,
                        curr_position_);
-  insertValuesInMatrix(curr_joint_angles_, right_arm_joint_number_, right_arm_joint_number_ + right_arm_size_, right_arm_index_,
-                       curr_position_);
+  insertValuesInMatrix(curr_joint_angles_, left_arm_joint_number_, left_arm_joint_number_ + left_arm_size_,
+                       left_arm_index_, curr_position_);
+  insertValuesInMatrix(curr_joint_angles_, right_arm_joint_number_, right_arm_joint_number_ + right_arm_size_,
+                       right_arm_index_, curr_position_);
 
   updateControlOutput();
 
@@ -101,12 +99,12 @@ void JointAnglesController::updateControlOutput()
   // printMatrix(desd_position_, "desd_position_");
   // printMatrix(curr_position_, "curr_position_");
   // printMatrix(error_, "error_");
-  
+
   p_out_ = k_p_ * error_;
   // printMatrix(k_p_, "k_p_");
   // printMatrix(p_out_, "p_out_");
 
-  derivative_ = (error_ - prev_error_) * (1/d_t);
+  derivative_ = (error_ - prev_error_) * (1 / d_t);
   // printMatrix(prev_error_, "prev_error_");
   // printMatrix(derivative_, "derivative_");
 
@@ -148,13 +146,14 @@ JointAnglesController::diagonalMatrixToVector(const Eigen::DiagonalMatrix<double
   return vector;
 }
 
-void JointAnglesController::printMatrix(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix, const std::string& matrix_name)
+void JointAnglesController::printMatrix(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix,
+                                        const std::string& matrix_name)
 {
-  std::cout << "####  "<<matrix_name << "  ####  "<< std::endl;
-  for (int j = 0; j < matrix.diagonal().size();j++)
+  std::cout << "####  " << matrix_name << "  ####  " << std::endl;
+  for (int j = 0; j < matrix.diagonal().size(); j++)
   {
-    for (int i = 0; i < matrix.diagonal().size();i++)
-      std::cout << matrix.toDenseMatrix()(j,i)<<"  ";
+    for (int i = 0; i < matrix.diagonal().size(); i++)
+      std::cout << matrix.toDenseMatrix()(j, i) << "  ";
     std::cout << "" << std::endl;
   }
 }
