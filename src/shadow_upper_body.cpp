@@ -8,13 +8,16 @@ ShadowUpperBody::ShadowUpperBody(ros::NodeHandle nh) : nh_(nh)
 ShadowUpperBody::~ShadowUpperBody()
 {
   run_code = false;
+  delete wholebodyController_;
+  delete joint_controller_;
 }
 
 void ShadowUpperBody::initialize()
 {
   rd_ = RobotDescription::getRobotDescription(nh_);
-  robot_state_ = RobotStateInformer::getRobotStateInformer(nh_);
+  ros::Duration(0.01).sleep();
   wholebodyController_ = new WholebodyControlInterface(nh_);
+  joint_controller_ = new JointAnglesController(nh_);
   updateJointLimits();
   // chest_frame_vector.push_back("chest_names")
 }
@@ -224,13 +227,19 @@ tf::StampedTransform ShadowUpperBody::getTransform(const std::string& frame_name
 
 void ShadowUpperBody::control()
 {
-  // TODO
+  joint_controller_->updateJointAccelerations(joint_trajectory_);
 }
 
 void ShadowUpperBody::execute()
 {
-  wholebodyController_->executeTrajectory(joint_trajectory_);
-  // ros::Duration(time_execution).sleep();
+  wholebodyController_->executeAccnTrajectory(joint_trajectory_);
+  // std::string print = "";
+  // for (int i = 0; i < joint_trajectory_.joint_names.size();i++)
+  //   print = print + "\n" + joint_trajectory_.joint_names.at(i) + " - " +
+  //           std::to_string(joint_trajectory_.points.front().positions.at(i));
+  // ROS_INFO_THROTTLE(0.5, print.c_str());
+
+  ros::Duration(0.02).sleep();
 }
 
 void ShadowUpperBody::startShadowMotion()
@@ -238,7 +247,7 @@ void ShadowUpperBody::startShadowMotion()
   while(run_code&&ros::ok())
   {
     update();
-    // ros::Duration(0.1).sleep();
+    control();
     execute();
   }
 }

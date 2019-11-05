@@ -1,10 +1,7 @@
-#include "ros/ros.h"
-#include <vector>
-
-#include <tough_common/robot_state.h>
-#include <tough_controller_interface/arm_control_interface.h>
-#include <tough_controller_interface/chest_control_interface.h>
+#include <tough_common/robot_description.h>
 #include <tough_controller_interface/wholebody_control_interface.h>
+
+#include <imitation_game/joint_angles_controller.h>
 
 class ShadowUpperBody
 {
@@ -13,6 +10,7 @@ private:
   RobotStateInformer* robot_state_;
   RobotDescription* rd_;
   WholebodyControlInterface* wholebodyController_;
+  JointAnglesController* joint_controller_;
 
   std::map<std::string, int> jointIndexMap();
   trajectory_msgs::JointTrajectory joint_trajectory_;
