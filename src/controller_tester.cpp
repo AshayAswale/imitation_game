@@ -2,6 +2,8 @@
 #include <tough_common/robot_state.h>
 #include <tough_controller_interface/arm_control_interface.h>
 #include <tough_controller_interface/chest_control_interface.h>
+#include <tough_controller_interface/wholebody_control_interface.h>
+#include <tough_kinematics/tough_kinematics.h>
 #include <ros/ros.h>
 
 int main(int argc, char** argv)
@@ -11,48 +13,45 @@ int main(int argc, char** argv)
   ros::AsyncSpinner spinner(10);
   spinner.start();
 
-  RobotStateInformer* state_informer = RobotStateInformer::getRobotStateInformer(nh);
   RobotDescription* rd = RobotDescription::getRobotDescription(nh);
-  ros::Duration(0.5).sleep();
-  JointAnglesController joint_controller(nh);
-  ArmControlInterface arm_controller(nh);
-  ChestControlInterface chest_controller(nh);
+  RobotStateInformer* state_informer_ = RobotStateInformer::getRobotStateInformer(nh);
+  ros::Duration(0.01).sleep();
+  WholebodyControlInterface wb_controller(nh);
+  geometry_msgs::PoseStamped pose;
+  pose.pose.orientation.w = 1.0;
+  pose.header.frame_id = rd->getPelvisFrame();
 
-  std::vector<std::string> left_arm_names;
-  std::vector<double> joint_positions;
-  joint_positions.resize(17);
-  for (auto& i : joint_positions)
-    i = 0;
-
-  for (int i = 0; i < 3;i++)
-    joint_positions.at(i) = 0.3;
-
-  std::vector<double> joint_accelerations;
-  std::vector<double> arm_accelerations;
-  std::vector<double> chest_accelerations;
-
-  int left_arm_position = 3;
-  int right_arm_position = 10;
-  int arm_position;
-  RobotSide side = RobotSide::LEFT;
-
-  while (ros::ok)
+  if (argc != 4)
   {
-    arm_accelerations.resize(0);
-    chest_accelerations.resize(0);
-
-    side = side == RobotSide::LEFT ? RobotSide::RIGHT : RobotSide::LEFT;
-    arm_position = side == RobotSide::LEFT ? left_arm_position : right_arm_position;
-    joint_accelerations = joint_controller.getControlledJointAngles(joint_positions);
-    
-    arm_accelerations.insert(arm_accelerations.end(), joint_accelerations.begin() + arm_position,
-                             joint_accelerations.begin() + arm_position + 7);
-    arm_controller.moveArmJointsAcceleration(side, arm_accelerations);
-
-    chest_accelerations.insert(chest_accelerations.end(), joint_accelerations.begin(), joint_accelerations.begin() + 3);
-    chest_controller.executeChestAccelerations(chest_accelerations);
+    pose.pose.position.x = 0.4;
+    pose.pose.position.y = -0.8;
+    pose.pose.position.z = 0.2;
   }
+  else
+  {
+    pose.pose.position.x = std::atof(argv[1]);
+    pose.pose.position.y = std::atof(argv[2]);
+    pose.pose.position.z = std::atof(argv[3]);
+  }
+  std::vector<double> joint_angles;
+  trajectory_msgs::JointTrajectory result_joint_angles;
 
-  spinner.start();
+  ToughKinematics tough_kinematics(nh);
+  JointAnglesController joint_controller(nh);
+  if (tough_kinematics.solveIK(TOUGH_COMMON_NAMES::RIGHT_ARM_10DOF_GROUP, pose, result_joint_angles))
+  {
+    while(ros::ok())
+    {
+      joint_controller.updateJointAccelerations(result_joint_angles);
+      wb_controller.executeAccnTrajectory(result_joint_angles);
+      ros::Duration(0.02).sleep();
+    }
+    // wb_controller.executeTrajectory(result_joint_angles);
+    // ros::Duration(1).sleep();
+  }
+  else
+    ROS_ERROR("COULD NOT PLAN FOR THE TRAJECTORY");
+
+  spinner.stop();
   return 0;
 }

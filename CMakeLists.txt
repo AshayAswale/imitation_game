@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   # tough_stability
   tough_moveit_planners
   tough_controller_interface
+  tough_kinematics
 )
 
 ## System dependencies are found with CMake's conventions
