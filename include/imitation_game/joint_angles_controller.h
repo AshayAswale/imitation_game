@@ -14,10 +14,10 @@ private:
   std::vector<std::pair<double, double>> joint_limits_;
   std::vector<double> max_jt_accn, min_jt_accn;
 
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> k_p_, k_d_, derivative_;
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> p_out_, d_out_, contr_output_;
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> curr_position_, prev_position_, desd_position_;
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> error_, prev_error_;
+  Eigen::DiagonalMatrix<double, Eigen::Dynamic> k_p_, k_d_;
+  Eigen::VectorXd p_out_, d_out_, contr_output_, derivative_;
+  Eigen::VectorXd curr_position_, prev_position_, desd_position_;
+  Eigen::VectorXd error_, prev_error_;
 
   size_t total_joints_size_;
   double d_t;
@@ -32,12 +32,12 @@ private:
   void updateControlOutput();
   void updateCurrJointAngles();
   void updateDesdPosForJointLimits();
-  void limitAccelerations(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix);
+  void limitAccelerations(Eigen::VectorXd& acc_vec);
   void printMatrix(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix, const std::string& matrix_name);
 
   int getJointNumber(const std::string& joint_name);
 
-  std::vector<double> diagonalMatrixToVector(const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix);
+  std::vector<double> EigenToStdVector(Eigen::VectorXd& eigen_vec);
 
   /**
    * @brief Inserts values in the matrix
@@ -48,11 +48,11 @@ private:
    * @param matrix            - [output]
    */
   inline void insertValuesInMatrix(const std::vector<double>& vector, const int vec_start_index, const int vec_end_index, int mat_start_index,
-                                   Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix)
+                                   Eigen::VectorXd& eigen_vec)
   {
     for (int i = vec_start_index; i < vec_end_index; i++, mat_start_index++)
     {
-      matrix.diagonal()(mat_start_index) = vector.at(i);
+      eigen_vec(mat_start_index) = vector.at(i);
     }
   }
 
@@ -60,14 +60,14 @@ private:
       SHOULD BE IMPLEMENTED USING THE RETURN VALUE OPTIMISATION, NOT CALL BY REF.
       THIS IS ONLY TEMPORARY FIX
   */
-  inline void vectorToDiagonalMatrix(const std::vector<double>& vector,
-                                     Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix)
+  inline void stdToEigenVector(const std::vector<double>& vector,
+                                     Eigen::VectorXd& eigen_vec)
   {
     int size = vector.size();
 
     for (int i = 0; i < vector.size(); i++)
     {
-      matrix.diagonal()(i) = vector.at(i);
+      eigen_vec(i) = vector.at(i);
     }
   }
 
@@ -111,35 +111,3 @@ public:
   int getLeftArmIndexAcceleration() const;
   int getRightArmIndexAcceleration() const;
 };
-
-Eigen::DiagonalMatrix<double, Eigen::Dynamic> operator-(const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& mat_1,
-                                                        const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& mat_2)
-{
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> output_mat;
-  output_mat.diagonal() = mat_1.diagonal() - mat_2.diagonal();
-  return output_mat;
-}
-
-Eigen::DiagonalMatrix<double, Eigen::Dynamic> operator+(const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& mat_1,
-                                                        const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& mat_2)
-{
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> output_mat;
-  output_mat.diagonal() = mat_1.diagonal() + mat_2.diagonal();
-  return output_mat;
-}
-
-Eigen::DiagonalMatrix<double, Eigen::Dynamic> operator*(const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& mat_1,
-                                                        const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& mat_2)
-{
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> output_mat;
-  output_mat.diagonal() = mat_1.toDenseMatrix() * mat_2.diagonal();
-  return output_mat;
-}
-
-Eigen::DiagonalMatrix<double, Eigen::Dynamic> operator/(const Eigen::DiagonalMatrix<double, Eigen::Dynamic>& mat_1,
-                                                        const int scaler)
-{
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> output_mat;
-  output_mat.diagonal() = mat_1.diagonal() * (1/scaler);
-  return output_mat;
-}
