@@ -11,9 +11,10 @@ private:
 
   std::vector<std::string> joint_names_;
   std::vector<double> curr_joint_angles_;
+  std::vector<std::pair<double, double>> joint_limits_;
+  std::vector<double> max_jt_accn, min_jt_accn;
 
   Eigen::DiagonalMatrix<double, Eigen::Dynamic> k_p_, k_d_, derivative_;
-  Eigen::DiagonalMatrix<double, Eigen::Dynamic> max_jt_accn, min_jt_accn;
   Eigen::DiagonalMatrix<double, Eigen::Dynamic> p_out_, d_out_, contr_output_;
   Eigen::DiagonalMatrix<double, Eigen::Dynamic> curr_position_, prev_position_, desd_position_;
   Eigen::DiagonalMatrix<double, Eigen::Dynamic> error_, prev_error_;
@@ -30,6 +31,7 @@ private:
 
   void updateControlOutput();
   void updateCurrJointAngles();
+  void updateDesdPosForJointLimits();
   void limitAccelerations(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix);
   void printMatrix(Eigen::DiagonalMatrix<double, Eigen::Dynamic>& matrix, const std::string& matrix_name);
 
