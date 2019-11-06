@@ -15,6 +15,7 @@ ShadowUpperBody::~ShadowUpperBody()
 void ShadowUpperBody::initialize()
 {
   rd_ = RobotDescription::getRobotDescription(nh_);
+  RobotStateInformer* state_inf = RobotStateInformer::getRobotStateInformer(nh_);
   ros::Duration(0.01).sleep();
   wholebodyController_ = new WholebodyControlInterface(nh_);
   joint_controller_ = new JointAnglesController(nh_);
@@ -52,6 +53,7 @@ void ShadowUpperBody::update()
 {
   clearJointTrajectory();
   updateTranforms();
+  insertRestJoints();
   resizeJointTrajectory();
 }
 
@@ -84,6 +86,7 @@ void ShadowUpperBody::updateTranforms()
   tf::StampedTransform transform;
   for (auto group : frames_vector_)
   {
+    // #### HARDCODING ####
     std::string frame = group.at(0);
     transform = getTransform(frame.data(), child_parent_frames_[frame.data()]);
     getRollPitchYaw(transform, roll, pitch, yaw);
@@ -93,27 +96,12 @@ void ShadowUpperBody::updateTranforms()
     transform = getTransform(frame.data(), child_parent_frames_[frame.data()]);
     getRollPitchYaw(transform, roll, pitch, yaw);
     updateJointTrajectoryMsg(child_parent_frames_[frame.data()], roll, pitch, yaw);
-
-    frame = group.at(2);
-    if (frame.compare(left_wrist_dummy) == 0)
-    {
-      for (int index = 4; index < 7; index++)
-      {
-        joint_trajectory_.joint_names.push_back(left_arm_names_.at(index));
-        joint_trajectory_.points.front().positions.push_back(0);
-      }
-      continue;
-    }
-    else if(frame.compare(right_wrist_dummy)==0)
-    {
-      for (int index = 4; index < 7; index++)
-      {
-        joint_trajectory_.joint_names.push_back(right_arm_names_.at(index));
-        joint_trajectory_.points.front().positions.push_back(0);  
-      }
-      continue;
-    }
   }
+  transform = getTransform(neck_frame_, child_parent_frames_[neck_frame_]);
+  getRollPitchYaw(transform, roll, pitch, yaw);
+  roll = atan(transform.getOrigin().getY()/transform.getOrigin().getZ());
+  ROS_INFO("Roll - %f", roll);
+  updateJointTrajectoryMsg(child_parent_frames_[neck_frame_], roll, pitch);
   // {
   //   std::vector<std::string> link = group.at(0);
   //   transform = getTransform(link.data(), child_parent_frames_[link.data()]);
@@ -225,6 +213,13 @@ tf::StampedTransform ShadowUpperBody::getTransform(const std::string& frame_name
   }
 }
 
+void ShadowUpperBody::insertRestJoints()
+{
+  joint_trajectory_.joint_names.insert(joint_trajectory_.joint_names.end(), rest_joints.begin(), rest_joints.end());
+  for(auto& pts: joint_trajectory_.points)
+    pts.positions.resize(joint_trajectory_.joint_names.size());
+}
+
 void ShadowUpperBody::control()
 {
   joint_controller_->updateJointAccelerations(joint_trajectory_);
@@ -233,12 +228,6 @@ void ShadowUpperBody::control()
 void ShadowUpperBody::execute()
 {
   wholebodyController_->executeAccnTrajectory(joint_trajectory_);
-  // std::string print = "";
-  // for (int i = 0; i < joint_trajectory_.joint_names.size();i++)
-  //   print = print + "\n" + joint_trajectory_.joint_names.at(i) + " - " +
-  //           std::to_string(joint_trajectory_.points.front().positions.at(i));
-  // ROS_INFO_THROTTLE(0.5, print.c_str());
-
   ros::Duration(0.02).sleep();
 }
 
