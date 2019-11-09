@@ -34,7 +34,8 @@ void JointAnglesController::initializeVariables()
   joint_names_.resize(0);
   joint_names_.insert(joint_names_.begin() + chest_index_, chest_joint_names.begin(), chest_joint_names.end());
   joint_names_.insert(joint_names_.begin() + left_arm_index_, left_arm_joint_names.begin(), left_arm_joint_names.end());
-  joint_names_.insert(joint_names_.begin() + right_arm_index_, right_arm_joint_names.begin(), right_arm_joint_names.end());
+  joint_names_.insert(joint_names_.begin() + right_arm_index_, right_arm_joint_names.begin(),
+                      right_arm_joint_names.end());
 
   total_joints_size_ = chest_size_ + left_arm_size_ + right_arm_size_;
   initializeMatrices(total_joints_size_);
@@ -45,12 +46,14 @@ void JointAnglesController::initializeVariables()
   rd_->getChestJointLimits(chest_joint_limits);
   rd_->getLeftArmJointLimits(left_arm_joint_limits);
   rd_->getRightArmJointLimits(right_arm_joint_limits);
-  
+
   joint_limits_.resize(0);
   joint_limits_.insert(joint_limits_.begin() + chest_index_, chest_joint_limits.begin(), chest_joint_limits.end());
-  joint_limits_.insert(joint_limits_.begin() + left_arm_index_, left_arm_joint_limits.begin(), left_arm_joint_limits.end());
-  joint_limits_.insert(joint_limits_.begin() + right_arm_index_, right_arm_joint_limits.begin(), right_arm_joint_limits.end());
-  
+  joint_limits_.insert(joint_limits_.begin() + left_arm_index_, left_arm_joint_limits.begin(),
+                       left_arm_joint_limits.end());
+  joint_limits_.insert(joint_limits_.begin() + right_arm_index_, right_arm_joint_limits.begin(),
+                       right_arm_joint_limits.end());
+
   d_t = 0.02;
 }
 
@@ -105,11 +108,11 @@ void JointAnglesController::setDefaultGains()
           r_arm_wry2
 
   */
-  k_p_.diagonal() << 6, 6, 6, 6, 10, 28, 6, 35, 35, 35, 6, 10, 28, 28, 35, 35, 35;
-  k_d_.diagonal() << 2, 2.5, 3.4, 4, 6.3, 11, 4.5, 0.1, 0.1, 0.1, 4.2, 6.1, 11, 15, 0.1, 0.1, 0.1;
+  k_p_.diagonal() << 3, 3, 3, 3, 3, 28, 2, 35, 35, 35, 3, 3, 28, 2, 35, 35, 35;
+  k_d_.diagonal() << 3, 3, 3, 3.3, 11, 1.9, 4.5, 0.1, 0.1, 0.1, 3, 2.9, 11, 1.9, 0.1, 0.1, 0.1;
 
-  max_jt_accn = {5, 5, 5, 5, 5, 5, 5, 20, 20, 20, 5, 5, 5, 5, 20, 20, 20};
-  min_jt_accn = {-5, -5, -5, -5, -5, -5, -5, -20, -20, -20, -5, -5, -5, -5, -20, -20, -20};
+  max_jt_accn = { 5, 5, 5, 5, 5, 5, 5, 20, 20, 20, 5, 5, 5, 5, 20, 20, 20 };
+  min_jt_accn = { -5, -5, -5, -5, -5, -5, -5, -20, -20, -20, -5, -5, -5, -5, -20, -20, -20 };
 }
 
 std::vector<double> JointAnglesController::getControlledJointAngles(const std::vector<double>& joint_angles)
@@ -159,8 +162,7 @@ void JointAnglesController::limitAccelerations(Eigen::VectorXd& acc_vec)
   }
 }
 
-std::vector<double>
-JointAnglesController::EigenToStdVector(Eigen::VectorXd& eigen_vec)
+std::vector<double> JointAnglesController::EigenToStdVector(Eigen::VectorXd& eigen_vec)
 {
   std::vector<double> vector;
   int size = eigen_vec.size();
@@ -187,11 +189,11 @@ void JointAnglesController::printMatrix(Eigen::DiagonalMatrix<double, Eigen::Dyn
 
 void JointAnglesController::updateJointAccelerations(trajectory_msgs::JointTrajectory& traj_msg)
 {
-  for(auto& traj_pt : traj_msg.points)
+  for (auto& traj_pt : traj_msg.points)
   {
     updateCurrJointAngles();
     desd_position_ = curr_position_;
-    
+
     for (int i = 0; i < traj_msg.joint_names.size(); i++)
     {
       int jt_no = getJointNumber(traj_msg.joint_names.at(i));
@@ -214,7 +216,7 @@ int JointAnglesController::getJointNumber(const std::string& joint_name)
 {
   for (int i = 0; i < joint_names_.size(); i++)
   {
-    if(joint_names_.at(i) == joint_name)
+    if (joint_names_.at(i) == joint_name)
       return i;
   }
   ROS_ERROR("Could not find joint name %s in controller joint_names\n", joint_name);
@@ -223,14 +225,10 @@ int JointAnglesController::getJointNumber(const std::string& joint_name)
 
 void JointAnglesController::updateDesdPosForJointLimits()
 {
-  for (int i = 0; i < desd_position_.size();i++)
+  for (int i = 0; i < desd_position_.size(); i++)
   {
-    desd_position_(i) = desd_position_(i) < joint_limits_.at(i).first ?
-                                       joint_limits_.at(i).first :
-                                       desd_position_(i);
+    desd_position_(i) = desd_position_(i) < joint_limits_.at(i).first ? joint_limits_.at(i).first : desd_position_(i);
 
-    desd_position_(i) = desd_position_(i) > joint_limits_.at(i).second ?
-                                       joint_limits_.at(i).second :
-                                       desd_position_(i);
+    desd_position_(i) = desd_position_(i) > joint_limits_.at(i).second ? joint_limits_.at(i).second : desd_position_(i);
   }
 }
