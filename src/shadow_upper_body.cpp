@@ -101,7 +101,7 @@ void ShadowUpperBody::updateTranforms()
   getRollPitchYaw(transform, roll, pitch, yaw);
   roll = atan(transform.getOrigin().getY()/transform.getOrigin().getZ());
   ROS_INFO("Roll - %f", roll);
-  updateJointTrajectoryMsg(child_parent_frames_[neck_frame_], roll, pitch);
+  updateJointTrajectoryMsg(child_parent_frames_[neck_frame_], -roll, pitch);
   // {
   //   std::vector<std::string> link = group.at(0);
   //   transform = getTransform(link.data(), child_parent_frames_[link.data()]);
