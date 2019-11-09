@@ -6,10 +6,15 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <thread>
 
+struct LegPlacement
+{
+  RobotSide side;
+  geometry_msgs::PoseStamped leg_pose;
+};
+
 class ShadowLegs
 {
 private:
-
   enum LegUpSide
   {
     LEFT = 0,
@@ -21,9 +26,10 @@ private:
   tf::TransformListener leg_listener_pelvis_;
   tf::StampedTransform left_leg_transform_, right_leg_transform_, pelvis_transform_;
   tf::Vector3 left_leg_init_, right_leg_init_, pelvis_init_;
+  LegPlacement leg_place_pose_;
 
   float alpha_ = 1.0f;
-  float l_r_ = 0.85f; // ATLAS
+  float l_r_ = 0.85f;  // ATLAS
   // float l_r = 1.0; // Valkyrie
   float l_h_;
   float motion_time_ = 1.0f;
@@ -44,7 +50,7 @@ private:
   RobotSide robot_side_;
   geometry_msgs::PoseStamped leg_pose_world_, leg_pose_pelvis_;
   geometry_msgs::Pose ground_pose_;
-  
+
   bool is_robot_leg_up, is_human_leg_up;
   bool shift_robot_support_leg = false;
   bool control_motion_ = true;
@@ -60,7 +66,6 @@ private:
   std::thread thread_for_shadow_motion_;
 
   void setCalibValues();
-
 
   inline bool isRobotInDoubleSupport()
   {
@@ -82,7 +87,7 @@ private:
     float sigma = 0.2;
     l_h_ = latest_transform.getOrigin().length();
     alpha_ = l_r_ / (l_h_ + sigma);
-//     alpha_ = 0.5;
+    //     alpha_ = 0.5;
     ROS_INFO("Alpha --> %f", alpha_);
   }
 
@@ -92,6 +97,7 @@ private:
   void getFootOrientation(geometry_msgs::PoseStamped& foot_goal_pose);
   void setPelvisInitialHeight();
   void executePelvisHeight(float height);
+  void registerLegPlacementPose();
 
   // void stopLegsShadowMotion();
 
@@ -119,7 +125,6 @@ private:
   // void executePlaceLeg();
 
   // void doControl();
-
 
 public:
   ShadowLegs(ros::NodeHandle nh);
