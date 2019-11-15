@@ -46,6 +46,7 @@ int main(int argc, char** argv)
   RobotStateInformer* robot_state = RobotStateInformer::getRobotStateInformer(nh);
   RobotDescription* rd = RobotDescription::getRobotDescription(nh);
 
+  // ########################## CHANGE #################################
   int current_joint_number = 0;     // Current joint being tuned.
   double set_joint_position = 0.5;  // Desired value to be reached by the joint.+
   double motion_time = 2.0;
@@ -53,22 +54,23 @@ int main(int argc, char** argv)
   rd->getLeftArmJointNames(left_arm_joint_names);
   rd->getRightArmJointNames(right_arm_joint_names);
 
+  // ########################### CHANGE #################################
   RobotSide side = RobotSide::LEFT;
   RobotSide oppositeSide = side == RobotSide::LEFT ? RobotSide::RIGHT : RobotSide::LEFT;
   joint_names = side == RobotSide::LEFT ? left_arm_joint_names : right_arm_joint_names;
 
   arm_controller.moveToZeroPose(side, motion_time);
   ros::Duration(0.1).sleep();
-  arm_controller.moveToZeroPose(oppositeSide, motion_time);
-  ros::Duration(motion_time + 1.0).sleep();
-  arm_controller.moveArmJoint(oppositeSide, current_joint_number, -set_joint_position, motion_time);
+  // arm_controller.moveToZeroPose(oppositeSide, motion_time);
+  ros::Duration(motion_time + 3.0).sleep();
+  // arm_controller.moveArmJoint(oppositeSide, current_joint_number, -set_joint_position, motion_time);
   ROS_WARN("Starting to Control joint %s to %f", joint_names.at(current_joint_number).c_str(), set_joint_position);
 
   double current_position, error, previous_error = 0, previous_position = 0;
   double derivative;
   double max_acceleration = 5, min_accleration = -5;
   double Pout, Dout, output;
-  double dt = 0.02;
+  double dt = 0.01;
 
   std::vector<double> arm_accelerations;
   arm_accelerations.resize(7);
@@ -97,6 +99,7 @@ int main(int argc, char** argv)
 
     arm_accelerations.at(current_joint_number) = output;
     arm_controller.moveArmJointsAcceleration(side, arm_accelerations);
+    ros::Duration(dt).sleep();
   }
 
   return 0;
