@@ -1,6 +1,8 @@
 # Human Motion Imitation
 
 ## Dependencies
+
+### Kinect
 Install the periferals from [here](https://www.reddit.com/r/ROS/comments/6qejy0/openni_kinect_installation_on_kinetic_indigo/)
 
 NITE is now proprietary, but there are still links to older versions around the internet. I found mine [here](https://github.com/arnaud-ramey/NITE-Bin-Dev-Linux-v1.5.2.23.git). For Ubuntu install x64 (and x86 if your Ubunutu is 32bits)
@@ -18,6 +20,11 @@ If the problem persists, try launching with argument
 ```bash
 roslaunch openni_launch openni.launch device_id:=#2
 ```
+
+### Eigen 3.3.7
+Please download the Eigen 3.3.7 from [here](http://bitbucket.org/eigen/eigen/get/3.3.7.zip)
+
+Rename and copy the subdirectory `Eigen` from the downloaded file to the location as `/usr/include/eigen3/Eigen3.3.7`
 
 ## Running the code
 Run the following command to launch everything. 
