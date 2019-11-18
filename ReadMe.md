@@ -20,6 +20,12 @@ If the problem persists, try launching with argument
 ```bash
 roslaunch openni_launch openni.launch device_id:=#2
 ```
+### Openni_launch
+Install the openni launch files with this command:
+```bash
+sudo apt install ros-kinetic-openni*
+```
+
 
 ### Eigen 3.3.7
 Please download the Eigen 3.3.7 from [here](http://bitbucket.org/eigen/eigen/get/3.3.7.zip)
