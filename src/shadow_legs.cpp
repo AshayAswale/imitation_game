@@ -21,7 +21,9 @@ ShadowLegs::~ShadowLegs()
 void ShadowLegs::setPelvisInitialHeight()
 {
   tf::StampedTransform robot_pelvis_transform;
-  robot_pelvis_transform = getTransform(rd_->getPelvisFrame(), rd_->getWorldFrame());
+  // robot_pelvis_transform = getTransform(rd_->getPelvisFrame());
+  // robot_pelvis_init_height_ = 0.79;
+  robot_state_->getTransform(rd_->getPelvisFrame(), robot_pelvis_transform);
   robot_pelvis_init_height_ = robot_pelvis_transform.getOrigin().getZ();
 }
 
@@ -35,30 +37,27 @@ void ShadowLegs::startLegsShadowMotion()
   thread_for_shadow_motion_ = std::thread(&ShadowLegs::startMotionController, this);
 }
 
-tf::StampedTransform ShadowLegs::getTransform(const std::string& foot_frame, const std::string& ref_frame)
+tf::Transform ShadowLegs::getTransform(const std::string &track_frame)
 {
   static tf::StampedTransform latest_transform;
   try
   {
-    leg_listener_pelvis_.waitForTransform(ref_frame, foot_frame, ros::Time(0.0), ros::Duration(1.0));
-    leg_listener_pelvis_.lookupTransform(ref_frame, foot_frame, ros::Time(0.0), latest_transform);
+    latest_transform.setIdentity();
+    trans_listener_wrt_l_leg_.waitForTransform(op_left_foot_frame_, track_frame, ros::Time(0.0), ros::Duration(0.5));
+    trans_listener_wrt_l_leg_.lookupTransform(op_left_foot_frame_, track_frame, ros::Time(0.0), latest_transform);
     return latest_transform;
   }
-  catch (const std::exception& e)
+  catch (const std::exception &e)
   {
     std::cerr << e.what() << '\n';
     ros::Duration(0.01).sleep();
-    getTransform(foot_frame, ref_frame);
+    getTransform(track_frame);
   }
 }
 
 void ShadowLegs::setCalibValues()
 {
-  updateLegsTransform();
-  updateLegsTransform();
-  left_leg_init_ = left_leg_transform_.getOrigin();
-  right_leg_init_ = right_leg_transform_.getOrigin();
-  pelvis_init_ = pelvis_transform_.getOrigin();
+  updateTransforms();
 
   setAlphaValue();
 }
@@ -66,121 +65,101 @@ void ShadowLegs::setCalibValues()
 void ShadowLegs::startMotionController()
 {
   ros::Rate rate(100.0);
+  setLeftLegSwingLeg();
   while (control_motion_)
   {
-    updateLegsTransform();
-    if (isOperatorInDoubleSupport())
+    updateTransforms();
+    if (isOperatorInDoubleSupport() && !isRobotInDoubleSupport())
     {
-      if (isRobotInDoubleSupport())
-      {
-        setPelvisHeight();
-      }
-      else
+      // if (!isRobotInDoubleSupport() && isOperatorMoving())
       {
         ROS_INFO("Placing Leg Down.");
         placeLegDown();
       }
+      // movePelvis();
     }
     else
     {
-      if (isRobotInDoubleSupport())
-      {
-        ROS_INFO("Registering Leg Placement Pose");
-        registerLegPlacementPose();
-      }
+      // if (isRobotInDoubleSupport())
+      // {
+      //   ROS_INFO("Lifting Leg");
+      //   liftLeg();
+      // }
       ROS_INFO("Operator in Swing Phase");
-      if (isPoseReachable())
-      {
-        ROS_INFO("Executing Motion");
-        moveLeg();
-      }
-      else
-      {
-        ROS_WARN("Out of Reach!");
-      }
+
+      // if (isPoseReachable())
+      // {
+      ROS_INFO("Executing Motion");
+      moveLeg();
+      // movePelvis();
+      // }
+      // else
+      // {
+      //   ROS_WARN("Out of Reach!");
+      // }
     }
     // rate.sleep();
   }
 }
 
+void ShadowLegs::setLeftLegSwingLeg()
+{
+  swing_leg_.side = RobotSide::LEFT;
+  swing_leg_.leg_pose = pelv_wrt_l_leg_;
+}
+
 bool ShadowLegs::isOperatorInDoubleSupport()
 {
-  static bool left_leg_in_gbr, right_leg_in_gbr;
-  left_leg_in_gbr = isLegInGbr(left_foot_frame_);
-  right_leg_in_gbr = isLegInGbr(right_foot_frame_);
+  float ht_r_leg_wrt_l_leg = r_leg_wrt_l_leg_.getOrigin().getZ();
+  if (std::abs(ht_r_leg_wrt_l_leg) < gbr_height_)
+  {
+    return true; // Operator in double support
+  }
 
-  if (left_leg_in_gbr && right_leg_in_gbr)
-  {
-    swing_leg_side = LegUpSide::NONE;
-    return true;
-  }
-  else if (!left_leg_in_gbr && !right_leg_in_gbr)
-  {
-    return false;
-  }
+  swing_leg_.side = (ht_r_leg_wrt_l_leg > 0.0) ? RobotSide::RIGHT : RobotSide::LEFT;
+
+  if (swing_leg_.side == RobotSide::LEFT)
+    swing_leg_.leg_pose = r_leg_wrt_l_leg_.inverse();
   else
-  {
-    swing_leg_side = (!left_leg_in_gbr) ? LegUpSide::LEFT : LegUpSide::RIGHT;
-    return false;
-  }
+    swing_leg_.leg_pose = r_leg_wrt_l_leg_;
+
+  return false; // Operator in swing phase
 }
 
-bool ShadowLegs::isLegInGbr(std::string leg_frame)
+bool ShadowLegs::isOperatorMoving()
 {
-  static tf::StampedTransform* current_leg_transform;
-  static tf::Vector3* current_leg_init_vector;
+  static tf::Vector3 leg_transform;
+  leg_transform = last_leg_moved_.leg_pose.getOrigin() - swing_leg_.leg_pose.getOrigin();
 
-  static float delta_x, delta_y, delta_z;
-
-  current_leg_transform = (leg_frame.compare(left_foot_frame_) == 0) ? &left_leg_transform_ : &right_leg_transform_;
-  current_leg_init_vector = (leg_frame.compare(left_foot_frame_) == 0) ? &left_leg_init_ : &right_leg_init_;
-
-  delta_x = std::abs(current_leg_transform->getOrigin().getX() - current_leg_init_vector->getX());
-  delta_y = std::abs(current_leg_transform->getOrigin().getY() - current_leg_init_vector->getY());
-  delta_z = std::abs((current_leg_transform->getOrigin().getZ() + delta_P) - current_leg_init_vector->getZ());
-
-  if (delta_x < psi_x_ / 2 && delta_z < psi_z_ / 2)
-  {
+  if (leg_transform.length() > movement_threshold_)
     return true;
-    // ROS_WARN("%s Inside ")
-  }
   else
     return false;
 }
 
-void ShadowLegs::updateLegsTransform()
+void ShadowLegs::updateTransforms()
 {
-  left_leg_transform_ = getTransform(left_foot_frame_, pelvis_frame_);
-  right_leg_transform_ = getTransform(right_foot_frame_, pelvis_frame_);
-  pelvis_transform_ = getTransform(pelvis_frame_, openni_base_frame_);
-  delta_P = pelvis_transform_.getOrigin().getZ() - pelvis_init_.getZ();
+  r_leg_wrt_l_leg_ = getTransform(op_right_foot_frame_);
+  pelv_wrt_l_leg_ = getTransform(op_pelvis_frame_);
 }
 
-void ShadowLegs::setPelvisHeight()
+/**
+   * @brief NO FUNCTION IN TOUGH TO HAVE PELVIS TRAJECTORY.
+   * @todo implement when TOUGH facility introduced
+   * 
+   * 
+   */
+void ShadowLegs::movePelvis()
 {
-  static tf::StampedTransform robot_pelvis_transform;
-  static float current_delta_P, current_height;
-  robot_pelvis_transform = getTransform(rd_->getPelvisFrame(), rd_->getWorldFrame());
-  current_height = robot_pelvis_transform.getOrigin().getZ();
-  current_delta_P = current_height - robot_pelvis_init_height_;
-  if (std::abs(delta_P * alpha_ - current_delta_P) > pelvis_threshold_)
-  {
-    if (robot_pelvis_init_height_ + delta_P > pelvis_min_height)
-    {
-      ROS_INFO("delta_P=%f", delta_P);
-      // {
-      //   ROS_INFO("WTF! %f", robot_pelvis_init_height_);
-      //   executePelvisHeight(robot_pelvis_init_height_);
-      // }
-      // else
-      if (delta_P < 0)
-        executePelvisHeight(robot_pelvis_init_height_ + delta_P);
-    }
-    // else if (current_height > pelvis_min_height)
-    // {
-    //   executePelvisHeight(pelvis_min_height);
-    // }
-  }
+  static tf::Transform pelv_wrt_anchor_leg;
+  pelv_wrt_l_leg_.setIdentity();
+  if (swing_leg_.side == RobotSide::RIGHT)
+    pelv_wrt_anchor_leg = pelv_wrt_l_leg_;
+  else
+    pelv_wrt_anchor_leg = r_leg_wrt_l_leg_.inverse() * pelv_wrt_l_leg_;
+
+  // Should also have move pelvis along with the height.
+  executePelvisHeight(pelv_wrt_anchor_leg.getOrigin().getZ() * alpha_);
 }
 
 void ShadowLegs::executePelvisHeight(float height)
@@ -192,34 +171,56 @@ void ShadowLegs::executePelvisHeight(float height)
 
 void ShadowLegs::placeLegDown()
 {
-  // leg_place_pose_.leg_pose.pose.position.z += 0.02;
-  leg_controller_->moveFoot(leg_place_pose_.side, leg_place_pose_.leg_pose.pose, motion_time_);
+  geometry_msgs::Pose leg_place = tfTransformToMsg(swing_leg_.leg_pose);
+  leg_place.position.z += gbr_height_;
+  leg_controller_->moveFoot(swing_leg_.side, leg_place, motion_time_);
   ros::Duration(motion_time_).sleep();
 
-  leg_controller_->placeLeg(leg_place_pose_.side, 0.1, 0.5);
+  leg_controller_->placeLeg(swing_leg_.side, gbr_height_ * 2, 0.5);
   ros::Duration(0.5).sleep();
 }
 
-void ShadowLegs::getGBR(visualization_msgs::MarkerArray& markerArray)
+// void ShadowLegs::getGBR(visualization_msgs::MarkerArray& markerArray)
+// {
+//   markerArray.markers.at(0).pose.position.x = left_leg_init_.getX();
+//   markerArray.markers.at(0).pose.position.y = left_leg_init_.getY();
+//   markerArray.markers.at(0).pose.position.z = left_leg_init_.getZ() - delta_P;
+
+//   markerArray.markers.at(1).pose.position.x = right_leg_init_.getX();
+//   markerArray.markers.at(1).pose.position.y = right_leg_init_.getY();
+//   markerArray.markers.at(1).pose.position.z = right_leg_init_.getZ() - delta_P;
+
+//   if (execute_once_)
+//   {
+//     markerArray.markers.at(0).scale.x = psi_x_;
+//     markerArray.markers.at(0).scale.y = psi_y_;
+//     markerArray.markers.at(0).scale.z = psi_z_;
+//     markerArray.markers.at(1).scale.x = psi_x_;
+//     markerArray.markers.at(1).scale.y = psi_y_;
+//     markerArray.markers.at(1).scale.z = psi_z_;
+//     execute_once_ = false;
+//   }
+// }
+
+void ShadowLegs::getMarkerVectors(visualization_msgs::MarkerArray &markerArray)
 {
-  markerArray.markers.at(0).pose.position.x = left_leg_init_.getX();
-  markerArray.markers.at(0).pose.position.y = left_leg_init_.getY();
-  markerArray.markers.at(0).pose.position.z = left_leg_init_.getZ() - delta_P;
+  markerArray.markers.at(0).header.frame_id = "/openni/right_foot";
+  markerArray.markers.at(0).points.at(1).x = r_leg_wrt_l_leg_.inverse().getOrigin().getX();
+  markerArray.markers.at(0).points.at(1).y = r_leg_wrt_l_leg_.inverse().getOrigin().getY();
+  markerArray.markers.at(0).points.at(1).z = r_leg_wrt_l_leg_.inverse().getOrigin().getZ();
 
-  markerArray.markers.at(1).pose.position.x = right_leg_init_.getX();
-  markerArray.markers.at(1).pose.position.y = right_leg_init_.getY();
-  markerArray.markers.at(1).pose.position.z = right_leg_init_.getZ() - delta_P;
+  markerArray.markers.at(1).points.at(1).x = pelv_wrt_l_leg_.getOrigin().getX();
+  markerArray.markers.at(1).points.at(1).y = pelv_wrt_l_leg_.getOrigin().getY();
+  markerArray.markers.at(1).points.at(1).z = pelv_wrt_l_leg_.getOrigin().getZ();
 
-  if (execute_once_)
-  {
-    markerArray.markers.at(0).scale.x = psi_x_;
-    markerArray.markers.at(0).scale.y = psi_y_;
-    markerArray.markers.at(0).scale.z = psi_z_;
-    markerArray.markers.at(1).scale.x = psi_x_;
-    markerArray.markers.at(1).scale.y = psi_y_;
-    markerArray.markers.at(1).scale.z = psi_z_;
-    execute_once_ = false;
-  }
+  static tf::Transform temp_r_pel;
+  temp_r_pel.setIdentity();
+  temp_r_pel = r_leg_wrt_l_leg_.inverse() * pelv_wrt_l_leg_;
+
+  markerArray.markers.at(2).header.frame_id = "/openni/right_foot";
+  markerArray.markers.at(2).points.at(1).x = temp_r_pel.getOrigin().getX();
+  markerArray.markers.at(2).points.at(1).y = temp_r_pel.getOrigin().getY();
+  markerArray.markers.at(2).points.at(1).z = temp_r_pel.getOrigin().getZ();
 }
 
 void ShadowLegs::stopLegsShadowMotion()
@@ -229,69 +230,46 @@ void ShadowLegs::stopLegsShadowMotion()
 
 bool ShadowLegs::isPoseReachable()
 {
-  tf::StampedTransform* current_leg_transform;
-  current_leg_transform = (swing_leg_side == LegUpSide::LEFT) ? &left_leg_transform_ : &right_leg_transform_;
-  if (current_leg_transform->getOrigin().length() * alpha_ > l_r_)
-  {
-    return false;
-  }
-  else
-  {
-    return true;
-  }
+  bool reachable = (swing_leg_.leg_pose.getOrigin().length() > 1.0) ? true : false;
+  return reachable;
 }
 
 void ShadowLegs::moveLeg()
 {
+  last_leg_moved_ = swing_leg_;
   RobotSide side;
   geometry_msgs::PoseStamped foot_goal_pose, foot_goal_pose_world;
-  foot_goal_pose.header.frame_id = rd_->getPelvisFrame();
+  foot_goal_pose.header.frame_id = (swing_leg_.side == RobotSide::RIGHT) ? rd_->getLeftFootFrameName() : rd_->getRightFootFrameName();
   foot_goal_pose_world.header.frame_id = rd_->getWorldFrame();
-  tf::StampedTransform* current_leg_transform;
 
-  current_leg_transform = (swing_leg_side == LegUpSide::LEFT) ? &left_leg_transform_ : &right_leg_transform_;
-  side = (swing_leg_side == LegUpSide::LEFT) ? RobotSide::LEFT : RobotSide::RIGHT;
-  // foot_goal_pose.pose.orientation.w = 1.0;
-  foot_goal_pose.pose.position.x = current_leg_transform->getOrigin().getX() * alpha_;
-  foot_goal_pose.pose.position.y = current_leg_transform->getOrigin().getY() * alpha_;
-  foot_goal_pose.pose.position.z = current_leg_transform->getOrigin().getZ() * alpha_;
-  getFootOrientation(foot_goal_pose);
+  foot_goal_pose.pose.position.x = swing_leg_.leg_pose.getOrigin().getX() * alpha_;
+  foot_goal_pose.pose.position.y = swing_leg_.leg_pose.getOrigin().getY() * alpha_;
+  foot_goal_pose.pose.position.z = swing_leg_.leg_pose.getOrigin().getZ() * alpha_;
+  foot_goal_pose.pose.orientation.w = 1;
+  // getFootOrientation(foot_goal_pose);
   robot_state_->transformPose(foot_goal_pose, foot_goal_pose_world, rd_->getWorldFrame());
-  // ROS_INFO_STREAM(foot_goal_pose.pose << "\n" << foot_goal_pose_world.pose);
+
+  side = swing_leg_.side;
+  ROS_INFO_STREAM("Leg Side: " << swing_leg_.side);
+  ROS_INFO_STREAM(foot_goal_pose.pose << "\n"
+                                      << foot_goal_pose_world.pose);
   leg_controller_->moveFoot(side, foot_goal_pose_world.pose, motion_time_);
   ros::Duration(0.2).sleep();
 }
 
-void ShadowLegs::getFootOrientation(geometry_msgs::PoseStamped& foot_goal_pose)
+void ShadowLegs::getFootOrientation(geometry_msgs::PoseStamped &foot_goal_pose)
 {
   float roll = 0.0, pitch = 0.0, yaw = 0.0;
-  float y_offset = (swing_leg_side == LegUpSide::LEFT) ? -0.16 : 0.16;
-  roll = atan2((foot_goal_pose.pose.position.y + y_offset), -foot_goal_pose.pose.position.z);
-  // pitch = atan2(foot_goal_pose.pose.position.y, -foot_goal_pose.pose.position.z);
+  geometry_msgs::PoseStamped temp_foot_goal_pose;
+  temp_foot_goal_pose.header.frame_id = rd_->getPelvisFrame();
+  robot_state_->transformPose(foot_goal_pose, temp_foot_goal_pose, rd_->getPelvisFrame());
+  float y_offset = (swing_leg_.side == RobotSide::LEFT) ? -0.16 : 0.16;
+  roll = atan2((temp_foot_goal_pose.pose.position.y + y_offset), -temp_foot_goal_pose.pose.position.z);
+  // pitch = atan2(temp_foot_goal_pose.pose.position.y, -temp_foot_goal_pose.pose.position.z);
   ROS_INFO_STREAM("Roll--> " << roll << " Pitch--> " << pitch);
-  ROS_INFO_STREAM("x -->" << foot_goal_pose.pose.position.x << " y--> " << foot_goal_pose.pose.position.y << " z--> "
-                          << foot_goal_pose.pose.position.z);
+  ROS_INFO_STREAM("x -->" << temp_foot_goal_pose.pose.position.x << " y--> " << temp_foot_goal_pose.pose.position.y << " z--> "
+                          << temp_foot_goal_pose.pose.position.z);
   tf::Quaternion quat;
   quat.setRPY(roll, pitch, yaw);
   tf::quaternionTFToMsg(quat, foot_goal_pose.pose.orientation);
-}
-
-void ShadowLegs::registerLegPlacementPose()
-{
-  leg_place_pose_.side = (swing_leg_side == LegUpSide::LEFT) ? RobotSide::LEFT : RobotSide::RIGHT;
-
-  std::string foot_frame_name =
-      (swing_leg_side == LegUpSide::LEFT) ? rd_->getLeftFootFrameName() : rd_->getRightFootFrameName();
-  tf::StampedTransform foot_placing_tranform = getTransform(foot_frame_name, rd_->getWorldFrame());
-
-  leg_place_pose_.leg_pose.header.frame_id = rd_->getWorldFrame();
-  leg_place_pose_.leg_pose.header.seq = rand() % 100;
-
-  geometry_msgs::Quaternion quat;
-  tf::quaternionTFToMsg(foot_placing_tranform.getRotation(), quat);
-  leg_place_pose_.leg_pose.pose.orientation = quat;
-
-  leg_place_pose_.leg_pose.pose.position.x = foot_placing_tranform.getOrigin().getX();
-  leg_place_pose_.leg_pose.pose.position.y = foot_placing_tranform.getOrigin().getY();
-  leg_place_pose_.leg_pose.pose.position.z = foot_placing_tranform.getOrigin().getZ();
 }

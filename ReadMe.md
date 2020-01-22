@@ -47,11 +47,8 @@ Calibrate the tracker by standing in the _surrender pose_. On completion of the 
 #### Razer Controller(Optional)
 If you want to use Razer Hydra along with the kinect, First download the archeived `frame_publisher` from commit [f37c46d](https://github.com/AshayAswale/imitation_game/tree/f37c46d6b7fb32aa26c90e0f3bc3b6a83d7d30be/src)
 
-Then uncomment the `hydra.launch` launch file and `frame_publisher` from the `imitation_setup.launch` launch file. 
+Uncomment the `hydra.launch` launch file and `frame_publisher` from the `imitation_setup.launch` launch file. 
 
-To get in calibration pose, Stand in _surrender pose_ then rotate the hands about the biceps axis by 90 degree, 
-then about elbow such that the arms are pointing away from the body. 
-
-To calibrate long press the [Button 5](https://dl.razerzone.com/master-guides/Hydra/HydraOMG-ENG.pdf) on both the controllers
+To calibrate, stand in T-pose, and long press the [Button 5](https://dl.razerzone.com/master-guides/Hydra/HydraOMG-ENG.pdf) on both the controllers
 till you see the `Calibrating!!!` message on console.
 
