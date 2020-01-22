@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  message_generation
   tough_common
   # tough_stability
   tough_moveit_planners
@@ -51,12 +52,12 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * uncomment the generate_messages entry below
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+# Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  Joints.msg
+  Eulers.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -72,11 +73,11 @@ find_package(catkin REQUIRED COMPONENTS
 #   Action2.action
 # )
 
-## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+# Generate added messages and services with any dependencies listed here
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -110,7 +111,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES imitation_game
- CATKIN_DEPENDS roscpp rospy std_msgs tough_common tough_controller_interface tough_footstep tough_moveit_planners tough_perception_common
+ CATKIN_DEPENDS roscpp rospy std_msgs tough_common tough_controller_interface tough_footstep tough_moveit_planners tough_perception_common message_runtime
  DEPENDS system_lib
 )
 
@@ -171,6 +172,11 @@ target_link_libraries(gain_tuner  ${catkin_LIBRARIES} ${PROJECT_NAME})
 add_executable(controller_tester src/controller_tester.cpp)
 add_dependencies(controller_tester ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(controller_tester  ${catkin_LIBRARIES} ${PROJECT_NAME})
+
+## Specify libraries to link a library or executable target against
+add_executable(tf_pub src/tf_pub.cpp)
+add_dependencies(tf_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(tf_pub  ${catkin_LIBRARIES} ${PROJECT_NAME})
   
 # add_executable(test_com src/test_com.cpp)
 # add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
