@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 
   RobotDescription* rd = RobotDescription::getRobotDescription(nh);
   RobotStateInformer* state_informer_ = RobotStateInformer::getRobotStateInformer(nh);
-  ros::Duration(0.01).sleep();
+  ros::Duration(1).sleep();
   WholebodyControlInterface wb_controller(nh);
   geometry_msgs::PoseStamped pose;
   pose.pose.orientation.w = 1.0;
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     {
       joint_controller.updateJointAccelerations(result_joint_angles);
       wb_controller.executeAccnTrajectory(result_joint_angles);
-      ros::Duration(0.02).sleep();
+      // ros::Duration(0.02).sleep();
     }
     // wb_controller.executeTrajectory(result_joint_angles);
     // ros::Duration(1).sleep();

@@ -22,7 +22,7 @@
  * ##### BE EXTREMELY CAUTIOUS IF AT ALL THIS IS BEING TESTED ON THE REAL ROBOT #####
  *
  */
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   ros::init(argc, argv, "joint_gain_tuner");
   ros::NodeHandle nh;
@@ -43,12 +43,24 @@ int main(int argc, char** argv)
   double Kd = std::atof(argv[2]);
 
   ArmControlInterface arm_controller(nh);
-  RobotStateInformer* robot_state = RobotStateInformer::getRobotStateInformer(nh);
-  RobotDescription* rd = RobotDescription::getRobotDescription(nh);
+  RobotStateInformer *robot_state = RobotStateInformer::getRobotStateInformer(nh);
+  RobotDescription *rd = RobotDescription::getRobotDescription(nh);
+  std::vector<std::pair<double, double>> jt_lmt;
+  rd->getLeftArmJointLimits(jt_lmt);
+  for (auto &i : jt_lmt)
+    std::cout << i.first << "  <-->  " << i.second << std::endl;
+
+  std::cout << "" << std::endl;
+  std::cout << "" << std::endl;
+  std::cout << "" << std::endl;
+
+  rd->getRightArmJointLimits(jt_lmt);
+  for (auto &i : jt_lmt)
+    std::cout << i.first << "  <-->  " << i.second << std::endl;
 
   // ########################## CHANGE #################################
-  int current_joint_number = 0;     // Current joint being tuned.
-  double set_joint_position = 0.5;  // Desired value to be reached by the joint.+
+  int current_joint_number = 0;    // Current joint being tuned.
+  double set_joint_position = 0.5; // Desired value to be reached by the joint.+
   double motion_time = 2.0;
   std::vector<std::string> left_arm_joint_names, right_arm_joint_names, joint_names;
   rd->getLeftArmJointNames(left_arm_joint_names);
