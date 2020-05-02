@@ -1,0 +1,44 @@
+left_shoulder_frame_ + yaw_        "l_arm_shz"
+left_shoulder_frame_ + roll_       "l_arm_shx"
+left_elbow_frame_ + pitch_         "l_arm_ely"
+left_elbow_frame_ + roll_          "l_arm_elx"
+right_shoulder_frame_ + yaw_       "r_arm_shz"
+right_shoulder_frame_ + roll_      "r_arm_shx"
+right_elbow_frame_ + pitch_        "r_arm_ely"
+right_elbow_frame_ + roll_         "r_arm_elx"
+
+
+
+operator_pelvis_frame_ + roll_     "back_bkx"
+operator_pelvis_frame_ + pitch_    "back_bkz"
+operator_pelvis_frame_ + yaw_      "back_bky"
+
+
+/elbow_pose/joints[0]/yaw /elbow_pose/joints[0]/roll /elbow_pose/joints[1]/pitch /elbow_pose/joints[1]/roll /elbow_pose/joints[2]/yaw /elbow_pose/joints[2]/roll /elbow_pose/joints[3]/pitch /elbow_pose/joints[3]/roll /ihmc_ros/atlas/output/joint_states/position[3] /ihmc_ros/atlas/output/joint_states/position[4] /ihmc_ros/atlas/output/joint_states/position[5] /ihmc_ros/atlas/output/joint_states/position[6] /ihmc_ros/atlas/output/joint_states/position[12] /ihmc_ros/atlas/output/joint_states/position[13] /ihmc_ros/atlas/output/joint_states/position[14] /ihmc_ros/atlas/output/joint_states/position[15]
+/elbow_pose/joints[0]/yaw /elbow_pose/joints[0]/roll /ihmc_ros/atlas/output/joint_states/position[3] /ihmc_ros/atlas/output/joint_states/position[4]
+
+
+/elbow_pose/joints[0]/yaw /elbow_pose/joints[0]/roll /elbow_pose/joints[1]/pitch /elbow_pose/joints[1]/roll /elbow_pose/joints[2]/yaw /elbow_pose/joints[2]/roll /elbow_pose/joints[3]/pitch /elbow_pose/joints[3]/roll
+/ihmc_ros/atlas/output/joint_states/position[3] /ihmc_ros/atlas/output/joint_states/position[4] /ihmc_ros/atlas/output/joint_states/position[5] /ihmc_ros/atlas/output/joint_states/position[6] /ihmc_ros/atlas/output/joint_states/position[12] /ihmc_ros/atlas/output/joint_states/position[13] /ihmc_ros/atlas/output/joint_states/position[14] /ihmc_ros/atlas/output/joint_states/position[15]
+
+/elbow_pose/joints[0]/yaw /elbow_pose/joints[0]/roll /elbow_pose/joints[1]/pitch /elbow_pose/joints[1]/roll
+/ihmc_ros/atlas/output/joint_states/position[3] /ihmc_ros/atlas/output/joint_states/position[4] /ihmc_ros/atlas/output/joint_states/position[5] /ihmc_ros/atlas/output/joint_states/position[6]
+
+
+rqt_plot /elbow_pose/joints[0]/yaw /ihmc_ros/atlas/output/joint_states/position[3]
+rqt_plot /elbow_pose/joints[0]/roll /ihmc_ros/atlas/output/joint_states/position[4] 
+rqt_plot /elbow_pose/joints[1]/roll /ihmc_ros/atlas/output/joint_states/position[6] 
+
+
+
+ /elbow_pose/joints[1]/roll  /ihmc_ros/atlas/output/joint_states/position[6]
+
+
+ /elbow_pose/joints[0]/yaw /elbow_pose/joints[0]/roll /elbow_pose/joints[1]/roll /ihmc_ros/atlas/output/joint_states/position[3] /ihmc_ros/atlas/output/joint_states/position[4] /ihmc_ros/atlas/output/joint_states/position[6]
+
+ 
+ rqt_plot /elbow_pose/joints[1]/pitch  /ihmc_ros/atlas/output/joint_states/position[5] /elbow_pose/joints[0]/pitch /elbow_pose/joints[1]/yaw
+
+ rqt_plot /operator_leg_pose/x /robot_leg_pose/y
+ rqt_plot /operator_leg_pose/y /robot_leg_pose/z
+ rqt_plot /operator_leg_pose/z /robot_leg_pose/x

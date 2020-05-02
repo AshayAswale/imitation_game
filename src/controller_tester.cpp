@@ -24,7 +24,7 @@ int main(int argc, char** argv)
   if (argc != 4)
   {
     pose.pose.position.x = 0.4;
-    pose.pose.position.y = -0.8;
+    pose.pose.position.y = 0.8;
     pose.pose.position.z = 0.2;
   }
   else
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 
   ToughKinematics tough_kinematics(nh);
   JointAnglesController joint_controller(nh);
-  if (tough_kinematics.solveIK(TOUGH_COMMON_NAMES::RIGHT_ARM_10DOF_GROUP, pose, result_joint_angles))
+  if (tough_kinematics.solveIK(TOUGH_COMMON_NAMES::LEFT_ARM_7DOF_GROUP, pose, result_joint_angles))
   {
     while(ros::ok())
     {

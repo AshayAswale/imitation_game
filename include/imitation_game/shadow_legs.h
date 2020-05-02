@@ -38,6 +38,8 @@ private:
   float pelvis_min_height = 0.7;
   float pelvis_motion_time_ = 0.3;
   float delta_P;
+  bool leg_place_posn_register_flag = true;
+  bool leg_in_motion = false;
 
   float psi_x_ = 0.4, psi_y_ = 0.5, psi_z_ = 0.2;
 

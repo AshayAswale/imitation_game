@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     std::cout << i.first << "  <-->  " << i.second << std::endl;
 
   // ########################## CHANGE #################################
-  int current_joint_number = 0;    // Current joint being tuned.
+  int current_joint_number = 6;    // Current joint being tuned.
   double set_joint_position = 0.5; // Desired value to be reached by the joint.+
   double motion_time = 2.0;
   std::vector<std::string> left_arm_joint_names, right_arm_joint_names, joint_names;

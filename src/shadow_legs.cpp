@@ -75,7 +75,7 @@ void ShadowLegs::startMotionController()
       {
         setPelvisHeight();
       }
-      else
+      else if(leg_in_motion)
       {
         ROS_INFO("Placing Leg Down.");
         placeLegDown();
@@ -83,7 +83,7 @@ void ShadowLegs::startMotionController()
     }
     else
     {
-      if (isRobotInDoubleSupport())
+      if (isRobotInDoubleSupport() && leg_place_posn_register_flag)
       {
         ROS_INFO("Registering Leg Placement Pose");
         registerLegPlacementPose();
@@ -192,12 +192,16 @@ void ShadowLegs::executePelvisHeight(float height)
 
 void ShadowLegs::placeLegDown()
 {
-  // leg_place_pose_.leg_pose.pose.position.z += 0.02;
+  leg_place_pose_.leg_pose.pose.position.z += 0.1;
   leg_controller_->moveFoot(leg_place_pose_.side, leg_place_pose_.leg_pose.pose, motion_time_);
   ros::Duration(motion_time_).sleep();
 
-  leg_controller_->placeLeg(leg_place_pose_.side, 0.1, 0.5);
-  ros::Duration(0.5).sleep();
+  ROS_INFO("hihihihi");
+
+  leg_controller_->placeLeg(leg_place_pose_.side, 0.2, motion_time_);
+  ros::Duration(motion_time_*2).sleep();
+  leg_place_posn_register_flag = true;
+  leg_in_motion = false;
 }
 
 void ShadowLegs::getGBR(visualization_msgs::MarkerArray& markerArray)
@@ -260,6 +264,7 @@ void ShadowLegs::moveLeg()
   // ROS_INFO_STREAM(foot_goal_pose.pose << "\n" << foot_goal_pose_world.pose);
   leg_controller_->moveFoot(side, foot_goal_pose_world.pose, motion_time_);
   ros::Duration(0.2).sleep();
+  leg_in_motion = true;
 }
 
 void ShadowLegs::getFootOrientation(geometry_msgs::PoseStamped& foot_goal_pose)
@@ -294,4 +299,6 @@ void ShadowLegs::registerLegPlacementPose()
   leg_place_pose_.leg_pose.pose.position.x = foot_placing_tranform.getOrigin().getX();
   leg_place_pose_.leg_pose.pose.position.y = foot_placing_tranform.getOrigin().getY();
   leg_place_pose_.leg_pose.pose.position.z = foot_placing_tranform.getOrigin().getZ();
+
+  leg_place_posn_register_flag = false;
 }
