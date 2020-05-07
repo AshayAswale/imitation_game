@@ -1,7 +1,7 @@
 #include <imitation_game/shadow_legs.h>
 #include <visualization_msgs/MarkerArray.h>
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
   ros::init(argc, argv, "test_shadow_legs");
   ros::NodeHandle nh;
@@ -13,7 +13,6 @@ int main(int argc, char** argv)
   ros::Publisher vis_pub = nh.advertise<visualization_msgs::MarkerArray>("visualization_marker_array", 0);
 
   shadow_legs.startLegsShadowMotion();
-
 
   visualization_msgs::Marker marker;
   markerArray.markers.resize(2);
@@ -42,8 +41,8 @@ int main(int argc, char** argv)
 
   while (ros::ok())
   {
-    shadow_legs.getGBR(markerArray);
-    vis_pub.publish( markerArray );
+    // shadow_legs.getGBR(markerArray);
+    vis_pub.publish(markerArray);
     ros::Duration(0.001).sleep();
   }
 
