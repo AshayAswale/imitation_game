@@ -198,7 +198,7 @@ target_link_libraries(tf_pub  ${catkin_LIBRARIES} ${PROJECT_NAME})
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS gain_tuner
+install(TARGETS gain_tuner test_upper_body test_shadow_legs
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

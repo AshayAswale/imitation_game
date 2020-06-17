@@ -11,6 +11,7 @@ private:
   RobotStateInformer *robot_state_;
   RobotDescription *rd_;
   WholebodyControlInterface *wholebodyController_;
+  ArmControlInterface *armController_;
   JointAnglesController *joint_controller_;
   ChestControlInterface *chest_controller_;
 
@@ -19,7 +20,7 @@ private:
   trajectory_msgs::JointTrajectory joint_trajectory_;
 
   int chest_roll_index_, chest_pitch_index_, chest_yaw_index_;
-  double time_execution = 0.02;
+  double time_execution = 01;
   bool run_code = true;
 
   std::string OPNNI_PREFIX_ = "openni/";
@@ -44,11 +45,7 @@ private:
   std::vector<std::string> rest_joints = {"back_bkz", "l_arm_wry", "l_arm_wrx", "l_arm_wry2",
                                           "r_arm_wry", "r_arm_wrx", "r_arm_wry2"};
 
-  std::map<std::string, std::pair<double, double>> joint_limits_map;
-  std::map<std::string, std::pair<double, double>>::iterator joint_limits_iterator_;
-
-  // DO NOT CHANGE THE SEQUENCE
-  std::vector<std::string> left_arm_names_, right_arm_names_, chest_names_;
+  ector<std::string> left_arm_names_, right_arm_names_, chest_names_;
 
   std::vector<std::string> chest_frame_vector = {neck_frame_};
 

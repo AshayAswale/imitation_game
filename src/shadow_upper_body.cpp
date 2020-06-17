@@ -18,6 +18,7 @@ void ShadowUpperBody::initialize()
   RobotStateInformer *state_inf = RobotStateInformer::getRobotStateInformer(nh_);
   ros::Duration(0.01).sleep();
   wholebodyController_ = new WholebodyControlInterface(nh_);
+  armController_ = new ArmControlInterface(nh_);
   joint_controller_ = new JointAnglesController(nh_);
   chest_controller_ = new ChestControlInterface(nh_);
 
@@ -199,7 +200,7 @@ void ShadowUpperBody::addToJointTrajectory(const std::string &frame_name, const 
     {
       chest_roll_index_ = joint_trajectory_.joint_names.size() - 1;
     }
- 
+
     joint_trajectory_.points.front().positions.push_back(rotation);
   }
   else
@@ -239,29 +240,30 @@ void ShadowUpperBody::control()
 
 void ShadowUpperBody::execute()
 {
-  wholebodyController_->executeAccnTrajectory(joint_trajectory_);
-  double roll = 0.8 * (joint_trajectory_.points.front().positions.at(chest_roll_index_));
-  if (roll < chest_limits.at(2).first)
-  {
-    roll = chest_limits.at(2).first;
-  }
-  else if (roll > chest_limits.at(2).second)
-  {
-    roll = chest_limits.at(2).second;
-  }
+  wholebodyController_->executeTrajectory(joint_trajectory_);
+  // armController_->
+  // ArmControlInterface double roll = 0.8 * (joint_trajectory_.points.front().positions.at(chest_roll_index_));
+  // if (roll < chest_limits.at(2).first)
+  // {
+  //   roll = chest_limits.at(2).first;
+  // }
+  // else if (roll > chest_limits.at(2).second)
+  // {
+  //   roll = chest_limits.at(2).second;
+  // }
 
-  double pitch = 0.8 * (joint_trajectory_.points.front().positions.at(chest_pitch_index_));
-  if (pitch < chest_limits.at(1).first)
-  {
-    pitch = chest_limits.at(1).first;
-  }
-  else if (pitch > chest_limits.at(1).second)
-  {
-    pitch = chest_limits.at(1).second;
-  }
+  // double pitch = 0.8 * (joint_trajectory_.points.front().positions.at(chest_pitch_index_));
+  // if (pitch < chest_limits.at(1).first)
+  // {
+  //   pitch = chest_limits.at(1).first;
+  // }
+  // else if (pitch > chest_limits.at(1).second)
+  // {
+  //   pitch = chest_limits.at(1).second;
+  // }
 
-  double yaw = 0;
-  chest_controller_->controlChest(roll, pitch, yaw, 0.75);
+  // double yaw = 0;
+  // chest_controller_->controlChest(roll, pitch, yaw, 0.75);
   // ros::Duration(0.02).sleep();
 }
 
