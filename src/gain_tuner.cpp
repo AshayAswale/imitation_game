@@ -29,9 +29,9 @@ int main(int argc, char **argv)
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
-  if (argc != 3)
+  if (argc != 5)
   {
-    ROS_INFO("Please give Kp and Kd as arguments");
+    ROS_INFO("Please give Side, Joint, Kp and Kd as arguments");
     return -1;
   }
 
@@ -39,8 +39,11 @@ int main(int argc, char **argv)
       Kp = 110
       Kd = 30
   */
-  double Kp = std::atof(argv[1]);
-  double Kd = std::atof(argv[2]);
+  int side_i = std::atof(argv[1]);
+  int joint = std::atof(argv[2]);
+
+  double Kp = std::atof(argv[3]);
+  double Kd = std::atof(argv[4]);
 
   ArmControlInterface arm_controller(nh);
   RobotStateInformer *robot_state = RobotStateInformer::getRobotStateInformer(nh);
@@ -59,15 +62,15 @@ int main(int argc, char **argv)
     std::cout << i.first << "  <-->  " << i.second << std::endl;
 
   // ########################## CHANGE #################################
-  int current_joint_number = 6;    // Current joint being tuned.
-  double set_joint_position = 0.5; // Desired value to be reached by the joint.+
+  int current_joint_number = joint; // Current joint being tuned.
+  double set_joint_position = 0.5;  // Desired value to be reached by the joint.+
   double motion_time = 2.0;
   std::vector<std::string> left_arm_joint_names, right_arm_joint_names, joint_names;
   rd->getLeftArmJointNames(left_arm_joint_names);
   rd->getRightArmJointNames(right_arm_joint_names);
 
   // ########################### CHANGE #################################
-  RobotSide side = RobotSide::LEFT;
+  RobotSide side = side_i == 0 ? RobotSide::LEFT : RobotSide::RIGHT;
   RobotSide oppositeSide = side == RobotSide::LEFT ? RobotSide::RIGHT : RobotSide::LEFT;
   joint_names = side == RobotSide::LEFT ? left_arm_joint_names : right_arm_joint_names;
 
