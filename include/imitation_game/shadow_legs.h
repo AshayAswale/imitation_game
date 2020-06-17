@@ -99,14 +99,15 @@ private:
     tf::StampedTransform latest_transform = getTransform(right_foot_frame_, pelvis_frame_);
     float sigma = 0.2;
     l_h_ = latest_transform.getOrigin().length();
-    alpha_ = l_r_ / (l_h_ + sigma);
+    // alpha_ = l_r_ / (l_h_ + sigma);
     //     alpha_ = 0.5;
+    alpha_ = 1;
     ROS_INFO("Alpha --> %f", alpha_);
   }
 
   void placeLegDown();
   void setPelvisHeight();
-  void moveLeg();
+  void moveLeg(const bool is_for_placing = false);
   void getFootOrientation(geometry_msgs::PoseStamped &foot_goal_pose);
   void setPelvisInitialHeight();
   void executePelvisHeight(float height);
