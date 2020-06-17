@@ -1,6 +1,8 @@
 #include <tough_common/robot_description.h>
 #include <tough_controller_interface/wholebody_control_interface.h>
 #include <tough_controller_interface/chest_control_interface.h>
+#include <razer_hydra/HydraRaw.h>
+#include <ros/subscriber.h>
 
 #include <imitation_game/joint_angles_controller.h>
 
@@ -8,6 +10,7 @@ class ShadowUpperBody
 {
 private:
   ros::NodeHandle nh_;
+  ros::Subscriber hydra_raw_subscriber_;
   RobotStateInformer *robot_state_;
   RobotDescription *rd_;
   WholebodyControlInterface *wholebodyController_;
@@ -21,6 +24,7 @@ private:
   int chest_roll_index_, chest_pitch_index_, chest_yaw_index_;
   double time_execution = 0.02;
   bool run_code = true;
+  bool hydra_motion_trigger_ = false;
 
   std::string OPNNI_PREFIX_ = "openni/";
   std::string left_shoulder_frame_ = OPNNI_PREFIX_ + "left_shoulder",
@@ -90,6 +94,12 @@ private:
   void control();
 
   void execute();
+
+  inline void hydraTriggerCB(const razer_hydra::HydraRaw &msg)
+  {
+    hydra_motion_trigger_ = (msg.analog.at(2) > 126 && msg.analog.at(5) > 126);
+    // ROS_INFO("Hydra Trigger: %i", hydra_motion_trigger_);
+  }
 
 public:
   ShadowUpperBody(ros::NodeHandle nh);

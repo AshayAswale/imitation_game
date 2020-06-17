@@ -3,6 +3,7 @@
 ShadowUpperBody::ShadowUpperBody(ros::NodeHandle nh) : nh_(nh)
 {
   initialize();
+  hydra_raw_subscriber_ = nh_.subscribe("/hydra_raw", 1000, &ShadowUpperBody::hydraTriggerCB, this);
 }
 
 ShadowUpperBody::~ShadowUpperBody()
@@ -269,8 +270,11 @@ void ShadowUpperBody::startShadowMotion()
 {
   while (run_code && ros::ok())
   {
-    update();
-    control();
-    execute();
+    if(hydra_motion_trigger_)
+    {
+      update();
+      control();
+      execute();
+    }
   }
 }

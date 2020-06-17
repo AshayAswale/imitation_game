@@ -9,6 +9,7 @@ ShadowLegs::ShadowLegs(ros::NodeHandle nh) : nh_(nh)
   ros::Duration(0.01).sleep();
   rd_ = RobotDescription::getRobotDescription(nh_);
   setPelvisInitialHeight();
+  hydra_raw_subscriber_ = nh_.subscribe("/hydra_raw", 1000, &ShadowLegs::hydraTriggerCB, this);
 }
 
 ShadowLegs::~ShadowLegs()
@@ -37,19 +38,25 @@ void ShadowLegs::startLegsShadowMotion()
 
 tf::StampedTransform ShadowLegs::getTransform(const std::string &foot_frame, const std::string &ref_frame)
 {
+  // ROS_INFO("Hydra status: %i", hydra_motion_trigger_);
   static tf::StampedTransform latest_transform;
-  try
+  if (hydra_motion_trigger_)
   {
-    leg_listener_pelvis_.waitForTransform(ref_frame, foot_frame, ros::Time(0.0), ros::Duration(1.0));
-    leg_listener_pelvis_.lookupTransform(ref_frame, foot_frame, ros::Time(0.0), latest_transform);
-    return latest_transform;
+    try
+    {
+      leg_listener_pelvis_.waitForTransform(ref_frame, foot_frame, ros::Time(0.0), ros::Duration(1.0));
+      leg_listener_pelvis_.lookupTransform(ref_frame, foot_frame, ros::Time(0.0), latest_transform);
+    }
+    catch (const std::exception &e)
+    {
+      std::cerr << e.what() << '\n';
+      ros::Duration(0.01).sleep();
+      // ROS_INFO("Dhik");
+      getTransform(foot_frame, ref_frame);
+      // ROS_INFO("Chik");
+    }
   }
-  catch (const std::exception &e)
-  {
-    std::cerr << e.what() << '\n';
-    ros::Duration(0.01).sleep();
-    getTransform(foot_frame, ref_frame);
-  }
+  return latest_transform;
 }
 
 void ShadowLegs::setCalibValues()
@@ -67,6 +74,7 @@ void ShadowLegs::startMotionController()
   ros::Rate rate(100.0);
   while (control_motion_)
   {
+    if(hydra_motion_trigger_)
     updateLegsTransform();
     if (isOperatorInDoubleSupport())
     {
@@ -196,7 +204,7 @@ void ShadowLegs::placeLegDown()
   leg_place_posn_register_flag = true;
   leg_in_motion = false;
 }
- 
+
 // void ShadowLegs::getGBR(visualization_msgs::MarkerArray &markerArray)
 // {
 //   markerArray.markers.at(0).pose.position.x = left_leg_init_.getX();

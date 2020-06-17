@@ -59,6 +59,7 @@
   <build_depend>tough_perception_common</build_depend>
   <build_depend>tough_kinematics</build_depend>
   <build_depend>message_runtime</build_depend>
+  <build_depend>razer_hydra</build_depend>
   <!-- <build_depend>tough_stability</build_depend> -->
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
@@ -70,6 +71,7 @@
   <build_export_depend>tough_perception_common</build_export_depend>
   <build_export_depend>tough_kinematics</build_export_depend>
   <build_export_depend>message_runtime</build_export_depend>
+  <build_export_depend>razer_hydra</build_export_depend>
   <!-- <build_export_depend>tough_stability</build_export_depend> -->
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
@@ -81,6 +83,7 @@
   <exec_depend>tough_perception_common</exec_depend>
   <exec_depend>tough_kinematics</exec_depend>
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>razer_hydra</exec_depend>
   <!-- <exec_depend>tough_stability</exec_depend> -->
 
 

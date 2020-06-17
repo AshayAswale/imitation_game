@@ -5,6 +5,8 @@
 #include <tf/transform_listener.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <thread>
+#include <razer_hydra/HydraRaw.h>
+#include <ros/subscriber.h>
 
 struct LegPlacement
 {
@@ -23,6 +25,7 @@ private:
   };
 
   ros::NodeHandle nh_;
+  ros::Subscriber hydra_raw_subscriber_;
   tf::TransformListener leg_listener_pelvis_;
   // tf::StampedTransform left_leg_transform_, right_leg_transform_, pelvis_transform_;
   tf::StampedTransform swing_leg_transform_, pelvis_transform_;
@@ -58,6 +61,7 @@ private:
   bool control_motion_ = true;
   bool execute_once_ = true;
   bool human_in_double_support_;
+  bool hydra_motion_trigger_ = false;
 
   std::string PREFIX_OPENNI = "/openni/";
   std::string left_foot_frame_ = PREFIX_OPENNI + "left_foot", right_foot_frame_ = PREFIX_OPENNI + "right_foot",
@@ -70,6 +74,11 @@ private:
   std::thread thread_for_shadow_motion_;
 
   void setCalibValues();
+  inline void hydraTriggerCB(const razer_hydra::HydraRaw &msg)
+  {
+    hydra_motion_trigger_ = (msg.analog.at(2) > 126 && msg.analog.at(5) > 126);
+    // ROS_INFO("Hydra Trigger: %i", hydra_motion_trigger_);
+  }
 
   inline void setAnchorLeg(RobotSide robot_side)
   {

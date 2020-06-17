@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   tough_moveit_planners
   tough_controller_interface
   tough_kinematics
+  razer_hydra
 )
 
 ## System dependencies are found with CMake's conventions
@@ -111,7 +112,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES imitation_game
- CATKIN_DEPENDS roscpp rospy std_msgs tough_common tough_controller_interface tough_footstep tough_moveit_planners tough_perception_common message_runtime
+ CATKIN_DEPENDS roscpp rospy std_msgs tough_common tough_controller_interface tough_footstep tough_moveit_planners tough_perception_common message_runtime razer_hydra
  DEPENDS system_lib
 )
 
