@@ -25,18 +25,21 @@ private:
   double time_execution = 0.02;
   bool run_code = true;
   bool hydra_motion_trigger_ = false;
+  bool hydra_wrist_trigger_left_ = false;
+  bool hydra_wrist_trigger_right_ = false;
 
   std::string OPNNI_PREFIX_ = "openni/";
   std::string left_shoulder_frame_ = OPNNI_PREFIX_ + "left_shoulder",
               right_shoulder_frame_ = OPNNI_PREFIX_ + "right_shoulder", right_elbow_frame_ = OPNNI_PREFIX_ + "right_elbow",
               left_elbow_frame_ = OPNNI_PREFIX_ + "left_elbow", right_hand_frame_ = OPNNI_PREFIX_ + "right_hand",
               left_hand_frame_ = OPNNI_PREFIX_ + "left_hand", operator_pelvis_frame_ = OPNNI_PREFIX_ + "pelvis",
+              left_palm_frame_ = OPNNI_PREFIX_ + "left_palm", right_palm_frame_ = OPNNI_PREFIX_ + "right_palm",
               neck_frame_ = OPNNI_PREFIX_ + "neck";
 
   std::string yaw_ = "_yaw", roll_ = "_roll", pitch_ = "_pitch";
 
   std::map<std::string, std::string> human_robot_joint_map_ = {
-      {left_shoulder_frame_ + yaw_, "l_arm_shz"}, {left_shoulder_frame_ + roll_, "l_arm_shx"}, {right_shoulder_frame_ + yaw_, "r_arm_shz"}, {right_shoulder_frame_ + roll_, "r_arm_shx"}, {left_elbow_frame_ + pitch_, "l_arm_ely"}, {left_elbow_frame_ + roll_, "l_arm_elx"}, {right_elbow_frame_ + pitch_, "r_arm_ely"}, {right_elbow_frame_ + roll_, "r_arm_elx"}, {operator_pelvis_frame_ + roll_, "back_bkx"}, {operator_pelvis_frame_ + pitch_, "back_bkz"}, {operator_pelvis_frame_ + yaw_, "back_bky"}};
+      {left_shoulder_frame_ + yaw_, "l_arm_shz"}, {left_shoulder_frame_ + roll_, "l_arm_shx"}, {right_shoulder_frame_ + yaw_, "r_arm_shz"}, {right_shoulder_frame_ + roll_, "r_arm_shx"}, {left_elbow_frame_ + pitch_, "l_arm_ely"}, {left_elbow_frame_ + roll_, "l_arm_elx"}, {right_elbow_frame_ + pitch_, "r_arm_ely"}, {right_elbow_frame_ + roll_, "r_arm_elx"}, {left_palm_frame_ + pitch_, "l_arm_wry"}, {left_palm_frame_ + roll_, "l_arm_wrx"}, {left_palm_frame_ + yaw_, "l_arm_wry2"}, {right_palm_frame_ + yaw_, "r_arm_wry2"}, {right_palm_frame_ + pitch_, "r_arm_wry"}, {right_palm_frame_ + roll_, "r_arm_wrx"}, {operator_pelvis_frame_ + roll_, "back_bkx"}, {operator_pelvis_frame_ + pitch_, "back_bkz"}, {operator_pelvis_frame_ + yaw_, "back_bky"}};
 
   std::map<std::string, std::string>::iterator string_map_iterator_;
   std::map<std::string, std::string> child_parent_frames_ = {{right_elbow_frame_, right_shoulder_frame_},
@@ -45,8 +48,7 @@ private:
                                                              {left_hand_frame_, left_elbow_frame_},
                                                              {neck_frame_, operator_pelvis_frame_}};
 
-  std::vector<std::string> rest_joints = {"back_bkz", "l_arm_wry", "l_arm_wrx", "l_arm_wry2",
-                                          "r_arm_wry", "r_arm_wrx", "r_arm_wry2"};
+  std::vector<std::string> rest_joints = {"back_bkz", "l_arm_wry2", "r_arm_wry2"};
 
   std::map<std::string, std::pair<double, double>> joint_limits_map;
   std::map<std::string, std::pair<double, double>>::iterator joint_limits_iterator_;
@@ -78,6 +80,7 @@ private:
   // void initializeJointIndexMap();
 
   void update();
+  void updateWrist();
   void updateTranforms();
   void updateJointTrajectoryMsg(const std::string &frame_name, double roll, double yaw);
   void updateJointTrajectoryMsg(const std::string &frame_name, double roll, double pitch, double yaw);
@@ -98,7 +101,9 @@ private:
   inline void hydraTriggerCB(const razer_hydra::HydraRaw &msg)
   {
     hydra_motion_trigger_ = (msg.analog.at(2) > 126 && msg.analog.at(5) > 126);
-    // ROS_INFO("Hydra Trigger: %i", hydra_motion_trigger_);
+    hydra_wrist_trigger_right_ = msg.buttons.at(0) == 1;
+    hydra_wrist_trigger_left_ = msg.buttons.at(1) == 1;
+    
   }
 
 public:

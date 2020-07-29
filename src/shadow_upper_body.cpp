@@ -57,6 +57,7 @@ void ShadowUpperBody::update()
 {
   clearJointTrajectory();
   updateTranforms();
+  // updateWrist();
   insertRestJoints();
   resizeJointTrajectory();
 }
@@ -137,6 +138,29 @@ void ShadowUpperBody::updateTranforms()
   // }
 }
 
+void ShadowUpperBody::updateWrist()
+{
+  static double yaw_left = 0, roll_left = 0, pitch_left = 0;
+  static double yaw_right = 0, roll_right = 0, pitch_right = 0;
+  tf::StampedTransform transform;
+
+  if (hydra_wrist_trigger_left_)
+  {
+    ROS_WARN(".");
+    transform = getTransform(left_palm_frame_, left_hand_frame_);
+    tf::Matrix3x3(transform.getRotation()).getRPY(roll_left, pitch_left, yaw_left);
+  }
+  updateJointTrajectoryMsg(left_palm_frame_, roll_left, pitch_left, yaw_left);
+
+  if (hydra_wrist_trigger_right_)
+  {
+    ROS_INFO(".");
+    transform = getTransform(right_palm_frame_, right_hand_frame_);
+    tf::Matrix3x3(transform.getRotation()).getRPY(roll_right, pitch_right, yaw_right);
+  }
+  updateJointTrajectoryMsg(right_palm_frame_, roll_right, pitch_right, yaw_right);
+}
+
 void ShadowUpperBody::getRollPitchYaw(const tf::StampedTransform &transform, double &roll, double &pitch, double &yaw)
 {
   // tf::Matrix3x3 mat(transform.getRotation());
@@ -200,7 +224,7 @@ void ShadowUpperBody::addToJointTrajectory(const std::string &frame_name, const 
     {
       chest_roll_index_ = joint_trajectory_.joint_names.size() - 1;
     }
- 
+
     joint_trajectory_.points.front().positions.push_back(rotation);
   }
   else
@@ -270,7 +294,7 @@ void ShadowUpperBody::startShadowMotion()
 {
   while (run_code && ros::ok())
   {
-    if(hydra_motion_trigger_)
+    if (hydra_motion_trigger_)
     {
       update();
       control();

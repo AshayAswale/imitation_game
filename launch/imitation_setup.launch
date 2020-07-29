@@ -4,11 +4,17 @@
     <arg name="device_id" value="#2"/>
   </include>
 
+  <include file="$(find razer_hydra)/launch/hydra.launch"/>
+
   <node pkg="openni_tracker" type="openni_tracker" name="openni_tracker" output="screen"/>
 
   <node pkg="imitation_game" type="test_upper_body" name="test_upper_body" output="screen"/>
 
-  <node pkg="imitation_game" type="test_shadow_legs" name="test_shadow_legs" output="screen"/>
+  <!-- <node pkg="imitation_game" type="test_shadow_legs" name="test_shadow_legs" output="screen"/> -->
+
+  <node pkg="imitation_game" type="frame_publisher" name="frame_publsher" output="screen"/>
+
+  <node pkg="imitation_game" type="dhupchik" name="dhupchik" output="screen"/>
 
   <node pkg="rviz" type="rviz" name="rviz"/>
 
