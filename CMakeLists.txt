@@ -178,10 +178,15 @@ target_link_libraries(controller_tester  ${catkin_LIBRARIES} ${PROJECT_NAME})
 add_executable(tf_pub src/tf_pub.cpp)
 add_dependencies(tf_pub ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(tf_pub  ${catkin_LIBRARIES} ${PROJECT_NAME})
+
+## Specify libraries to link a library or executable target against
+add_executable(frame_publisher src/frame_publisher.cpp)
+add_dependencies(frame_publisher ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(frame_publisher  ${catkin_LIBRARIES} ${PROJECT_NAME})
   
-# add_executable(test_com src/test_com.cpp)
-# add_dependencies(test_com ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-# target_link_libraries(test_com  ${catkin_LIBRARIES})
+add_executable(dhupchik src/dhupchik.cpp)
+add_dependencies(dhupchik ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(dhupchik  ${catkin_LIBRARIES})
 
 
 #############
@@ -199,7 +204,7 @@ target_link_libraries(tf_pub  ${catkin_LIBRARIES} ${PROJECT_NAME})
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS gain_tuner
+install(TARGETS gain_tuner frame_publisher dhupchik test_upper_body
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
