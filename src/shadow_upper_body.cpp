@@ -182,6 +182,9 @@ void ShadowUpperBody::updateJointTrajectoryMsg(const std::string &frame_name, do
   if (frame_name.at(7) == 'r')
     right_compensate = -1;
 
+  pitch = (pitch < 0) ? M_PI + pitch : pitch;
+  // if (right_compensate == 1)
+  //   ROS_INFO_STREAM(pitch);
   addToJointTrajectory(frame_name, pitch_frame, pitch);
   addToJointTrajectory(frame_name, roll_frame, right_compensate * std::max(std::abs(yaw), std::abs(roll)));
 }
@@ -286,7 +289,7 @@ void ShadowUpperBody::execute()
   }
 
   double yaw = 0;
-  chest_controller_->controlChest(roll, pitch, yaw, 0.75);
+  // chest_controller_->controlChest(roll, pitch, yaw, 0.75);
   // ros::Duration(0.02).sleep();
 }
 
