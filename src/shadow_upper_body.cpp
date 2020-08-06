@@ -57,7 +57,7 @@ void ShadowUpperBody::update()
 {
   clearJointTrajectory();
   updateTranforms();
-  // updateWrist();
+  updateWrist();
   insertRestJoints();
   resizeJointTrajectory();
 }
@@ -146,19 +146,38 @@ void ShadowUpperBody::updateWrist()
 
   if (hydra_wrist_trigger_left_)
   {
-    ROS_WARN(".");
     transform = getTransform(left_palm_frame_, left_hand_frame_);
-    tf::Matrix3x3(transform.getRotation()).getRPY(roll_left, pitch_left, yaw_left);
+    getWristRPY(transform, roll_left, pitch_left, yaw_left);
   }
-  updateJointTrajectoryMsg(left_palm_frame_, roll_left, pitch_left, yaw_left);
 
   if (hydra_wrist_trigger_right_)
   {
-    ROS_INFO(".");
     transform = getTransform(right_palm_frame_, right_hand_frame_);
-    tf::Matrix3x3(transform.getRotation()).getRPY(roll_right, pitch_right, yaw_right);
+    getWristRPY(transform, roll_right, pitch_right, yaw_right);
   }
-  updateJointTrajectoryMsg(right_palm_frame_, roll_right, pitch_right, yaw_right);
+  updateJointTrajectoryMsg(left_palm_frame_, roll_left, pitch_left, yaw_left, true);
+  updateJointTrajectoryMsg(right_palm_frame_, roll_right, pitch_right, yaw_right, true);
+}
+
+void ShadowUpperBody::getWristRPY(const tf::StampedTransform &transform, double &roll, double &pitch, double &yaw)
+{
+  tf::Matrix3x3 matrix(transform.getRotation());
+  double c4s5 = matrix.getColumn(2).getX();
+  double s4s5 = matrix.getColumn(2).getY();
+  double s5c6 = matrix.getRow(2).getX();
+  double s5s6 = matrix.getRow(2).getY();
+  if(c4s5 != 0)
+  { 
+    pitch = atan2(s4s5, c4s5);
+    roll = asin(s4s5/sin(pitch));
+    yaw = atan2(s5s6, -s5c6);
+  }
+  else
+  {
+    pitch = 0;
+    roll = 0;
+    yaw = 0;
+  }
 }
 
 void ShadowUpperBody::getRollPitchYaw(const tf::StampedTransform &transform, double &roll, double &pitch, double &yaw)
@@ -170,7 +189,7 @@ void ShadowUpperBody::getRollPitchYaw(const tf::StampedTransform &transform, dou
   pitch = atan(transform.getOrigin().getX() / transform.getOrigin().getZ());
 }
 
-void ShadowUpperBody::updateJointTrajectoryMsg(const std::string &frame_name, double roll, double pitch, double yaw)
+void ShadowUpperBody::updateJointTrajectoryMsg(const std::string &frame_name, double roll, double pitch, double yaw, bool is_wrist)
 {
   int right_compensate = 1;
   std::string yaw_frame = frame_name + yaw_;
@@ -179,14 +198,22 @@ void ShadowUpperBody::updateJointTrajectoryMsg(const std::string &frame_name, do
   // DO NOT CHANGE THE SEQUENCE
 
   // std::cout <<frame_name<< "  pitch: " << pitch << "   roll: " << std::max(std::abs(yaw), std::abs(roll)) << std::endl;
-  if (frame_name.at(7) == 'r')
-    right_compensate = -1;
-
-  pitch = (pitch < 0) ? M_PI + pitch : pitch;
-  // if (right_compensate == 1)
-  //   ROS_INFO_STREAM(pitch);
-  addToJointTrajectory(frame_name, pitch_frame, pitch);
-  addToJointTrajectory(frame_name, roll_frame, right_compensate * std::max(std::abs(yaw), std::abs(roll)));
+  if(is_wrist)
+  { 
+    addToJointTrajectory(frame_name, pitch_frame, pitch);
+    addToJointTrajectory(frame_name, roll_frame, roll);
+    // addToJointTrajectory(frame_name, yaw_frame, yaw);
+  }
+  else
+  {
+    if (frame_name.at(7) == 'r')
+      right_compensate = -1;
+    pitch = (pitch < 0) ? M_PI + pitch : pitch;
+    // if (right_compensate == 1)
+    //   ROS_INFO_STREAM(pitch);
+    addToJointTrajectory(frame_name, pitch_frame, pitch);
+    addToJointTrajectory(frame_name, roll_frame, right_compensate * std::max(std::abs(yaw), std::abs(roll)));
+  }
 }
 
 void ShadowUpperBody::updateJointTrajectoryMsg(const std::string &frame_name, double roll, double yaw)

@@ -83,7 +83,7 @@ private:
   void updateWrist();
   void updateTranforms();
   void updateJointTrajectoryMsg(const std::string &frame_name, double roll, double yaw);
-  void updateJointTrajectoryMsg(const std::string &frame_name, double roll, double pitch, double yaw);
+  void updateJointTrajectoryMsg(const std::string &frame_name, double roll, double pitch, double yaw, bool is_wrist = false);
   void clearJointTrajectory();
   void getRollPitchYaw(const tf::StampedTransform &transform, double &roll, double &pitch, double &yaw);
   tf::StampedTransform getTransform(const std::string &foot_frame, const std::string &ref_frame);
@@ -92,6 +92,7 @@ private:
   void insertJointLImits(const std::vector<std::string> &joint_names_vector, const std::vector<std::pair<double, double>> &joint_limits_temp);
   void addToJointTrajectory(const std::string &frame_name, const std::string &rotation_frame, double rotation);
   void insertRestJoints();
+  void getWristRPY(const tf::StampedTransform &transform, double &roll, double &pitch, double &yaw);
   // bool updateJointAngle(std::string frame_name, );
 
   void control();
