@@ -8,7 +8,8 @@ int main(int argc, char** argv)
   ros::AsyncSpinner spinner(1);
   spinner.start();
 
-
+  RobotStateInformer* state = RobotStateInformer::getRobotStateInformer(nh);
+  ros::Duration(1);
   ShadowUpperBody shadow(nh);
   shadow.startShadowMotion();
 
