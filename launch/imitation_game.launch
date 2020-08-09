@@ -2,8 +2,8 @@
 
   <node pkg="imitation_game" type="test_upper_body" name="test_upper_body" output="screen"/>
 
-  <!-- <node pkg="imitation_game" type="test_shadow_legs" name="test_shadow_legs" output="screen"/> -->
+  <node pkg="imitation_game" type="test_shadow_legs" name="test_shadow_legs" output="screen"/>
 
-  <!-- <node pkg="rviz" type="rviz" name="rviz"/> -->
+  <node pkg="rviz" type="rviz" name="rviz"/>
 
 </launch>

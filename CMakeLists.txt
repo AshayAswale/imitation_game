@@ -204,7 +204,7 @@ target_link_libraries(dhupchik  ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS gain_tuner frame_publisher dhupchik test_upper_body
+install(TARGETS gain_tuner frame_publisher dhupchik test_upper_body test_shadow_legs
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

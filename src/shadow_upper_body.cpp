@@ -316,8 +316,8 @@ void ShadowUpperBody::execute()
   }
 
   double yaw = 0;
-  // chest_controller_->controlChest(roll, pitch, yaw, 0.75);
-  // ros::Duration(0.02).sleep();
+  chest_controller_->controlChest(roll, pitch, yaw, 0.75);
+  ros::Duration(0.02).sleep();
 }
 
 void ShadowUpperBody::startShadowMotion()

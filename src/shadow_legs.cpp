@@ -80,7 +80,7 @@ void ShadowLegs::startMotionController()
     {
       if (isRobotInDoubleSupport())
       {
-        // setPelvisHeight();
+        setPelvisHeight();
       }
       else if (leg_in_motion)
       {
@@ -164,27 +164,27 @@ void ShadowLegs::setPelvisHeight()
   current_delta_P = current_height - robot_pelvis_init_height_;
   if (std::abs(delta_P * alpha_ - current_delta_P) > pelvis_threshold_)
   {
-    if (robot_pelvis_init_height_ + delta_P > pelvis_min_height)
-    {
-      ROS_INFO("delta_P=%f", delta_P);
+    // if (robot_pelvis_init_height_ + delta_P > pelvis_min_height)
+    // {
+    //   ROS_INFO("delta_P=%f", delta_P);
       // {
       //   ROS_INFO("WTF! %f", robot_pelvis_init_height_);
       //   executePelvisHeight(robot_pelvis_init_height_);
       // }
       // else
-      if (delta_P < 0)
-        executePelvisHeight(robot_pelvis_init_height_ + delta_P);
-    }
+      // if (delta_P < 0)
+      //   executePelvisHeight(robot_pelvis_init_height_ + delta_P);
+    // }
     // else if (current_height > pelvis_min_height)
     // {
-    //   executePelvisHeight(pelvis_min_height);
     // }
   }
+	executePelvisHeight(delta_P);
 }
 
 void ShadowLegs::executePelvisHeight(float height)
 {
-  ROS_INFO("Setting Pelvis Height to %f", height);
+  // ROS_INFO("Setting Pelvis Height to %f", height);
   pelvis_controller_->controlPelvisHeight(height, pelvis_motion_time_);
   ros::Duration(0.1).sleep();
 }
