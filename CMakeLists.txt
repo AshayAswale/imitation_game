@@ -12,12 +12,13 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
-  tough_common
   # tough_stability
+  tough_common
   tough_moveit_planners
   tough_controller_interface
   tough_kinematics
   razer_hydra
+  tough_footstep
 )
 
 ## System dependencies are found with CMake's conventions
@@ -58,6 +59,7 @@ add_message_files(
   FILES
   Joints.msg
   Eulers.msg
+  Vector.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -112,7 +114,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES imitation_game
- CATKIN_DEPENDS roscpp rospy std_msgs tough_common tough_controller_interface tough_footstep tough_moveit_planners tough_perception_common message_runtime razer_hydra
+ CATKIN_DEPENDS roscpp rospy std_msgs tough_common tough_controller_interface tough_footstep tough_moveit_planners tough_perception_common message_runtime razer_hydra tough_footstep
  DEPENDS system_lib
 )
 
@@ -187,7 +189,14 @@ target_link_libraries(frame_publisher  ${catkin_LIBRARIES} ${PROJECT_NAME})
 add_executable(dhupchik src/dhupchik.cpp)
 add_dependencies(dhupchik ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(dhupchik  ${catkin_LIBRARIES})
-
+  
+add_executable(imitation_walking_node src/imitation_walking_node.cpp)
+add_dependencies(imitation_walking_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(imitation_walking_node  ${catkin_LIBRARIES})
+  
+add_executable(imitation_gripper_node src/imitation_gripper_node.cpp)
+add_dependencies(imitation_gripper_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(imitation_gripper_node  ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -204,7 +213,7 @@ target_link_libraries(dhupchik  ${catkin_LIBRARIES})
 # )
 
 ## Mark executables and/or libraries for installation
-install(TARGETS gain_tuner frame_publisher dhupchik test_upper_body test_shadow_legs
+install(TARGETS gain_tuner frame_publisher dhupchik test_upper_body test_shadow_legs tf_pub imitation_walking_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

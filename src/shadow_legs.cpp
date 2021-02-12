@@ -80,7 +80,8 @@ void ShadowLegs::startMotionController()
     {
       if (isRobotInDoubleSupport())
       {
-        setPelvisHeight();
+        // ROS_INFO_STREAM("Avoided Pelvis Height change");
+        // setPelvisHeight();
       }
       else if (leg_in_motion)
       {
